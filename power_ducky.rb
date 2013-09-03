@@ -35,8 +35,8 @@ def case_reverse_meterpreter_menu
       end
 end
 def case_dump_hashes_menu
-  reverse_meterpreter_answer = reverse_meterpreter
-	  case reverse_meterpreter_answer
+  dump_hashes_answer = dump_hashes
+	  case dump_hashes_answer
 			when '1'
 		  when '2'
 			when '99'
@@ -44,13 +44,13 @@ def case_dump_hashes_menu
 			else
         print_error("Bad Choice")
 				sleep(1)
-			  case_reverse_meterpreter_menu
+			  case_dump_hashes_menu
       end
 
 end
 def case_dump_lsass_menu
-  reverse_meterpreter_answer = reverse_meterpreter
-	  case reverse_meterpreter_answer
+  dump_lsass_answer = dump_lsass
+	  case dump_lsass_answer
 			when '1'
 		  when '2'
 			when '99'
@@ -58,7 +58,7 @@ def case_dump_lsass_menu
 			else
         print_error("Bad Choice")
 				sleep(1)
-			  case_reverse_meterpreter_menu
+			  case_dump_lsass_menu
       end
 
 end
