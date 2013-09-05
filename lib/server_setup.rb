@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require './core'
+require './lib/core'
 include MainCommands
 class ServerSetUp
   def get_host()
@@ -23,8 +23,8 @@ class ServerSetUp
       sleep(1)
       port()
     else 
-    print_success("Using #{port}\n")
-    return port
+      print_success("Using #{port}\n")
+      return port
     end 
   end
   def hash_server(port)
