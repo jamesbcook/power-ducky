@@ -10,6 +10,7 @@ module Menu
       \n1) Reverse Meterpreter \
       \n2) Dump Domain and Local Hashes \
       \n3) Dump Lsass Process \
+      \n4) Wget Execute \
       \n99) Exit\n" 
     answer = Readline.readline('> ', true)
     return answer
@@ -48,4 +49,15 @@ module Menu
     answer = Readline.readline('> ', true)
     return answer
   end
+  def powershell_wget
+    system('clear')
+    print_powershell_wget
+    puts "This payload will download and executable from a webserver and execute it on the system"
+    print "
+    \n1) Admin with UAC\
+    \n2) Admin with out UAC\
+    \n3) Low Priv\n"
+    answer = Readline.readline('> ', true)
+    return answer
+  end 
 end
