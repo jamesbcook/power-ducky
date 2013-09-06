@@ -12,4 +12,7 @@ module Banners
   def print_dump_lsass_banner
   
   end
+  def print_powershell_wget
+
+  end
 end
