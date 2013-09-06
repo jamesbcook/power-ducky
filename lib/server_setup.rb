@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'socket'
 require './lib/core'
 include MainCommands
 class ServerSetUp
@@ -64,5 +65,26 @@ class ServerSetUp
     }
     rescue => error
     print_error(error)
+  end
+  def web_server()
+    print_info("Checking for Apache\n")
+    systemd_check = `systemctl status apache2`
+    service_check = `service apache2 status`
+    if systemd_check =~ /inactive/ or service_check =~ /NOT running/
+      print_info("Starting Server\n")
+      begin
+        `service apache2 start`
+      rescue
+        `systemctl start apache2`
+      end 
+    elsif systemd_check =~ /active/ or service_check =~ /running/
+      print_info("Server Already Running!\n")
+    else
+      print_error("Could not find Apache!\n")
+      exit
+    end 
+    rescue => error
+      print_error("#{error}\n")
+      exit
   end
 end
