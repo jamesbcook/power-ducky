@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 require 'socket'
-require './lib/core'
+require_relative 'core'
 include MainCommands
 class ServerSetUp
-  def get_host()
-    host_name = [(get_input("Enter the host ip to listen on: ") ), $stdin.gets.rstrip][1]
+  def get_host
+    host_name = [(get_input('Enter the host ip to listen on: ') ), $stdin.gets.rstrip][1]
     ip = host_name.split('.')
     if ip[0] == nil or ip[1] == nil or ip[2] == nil or ip[3] == nil 
       print_error("Not a valid IP\n") 
@@ -13,8 +13,8 @@ class ServerSetUp
     print_success("Using #{host_name} as server\n")
     return host_name
   end
-  def get_port()
-    port = [(get_input("Enter the port you would like to use or leave blank for [443]: ") ), $stdin.gets.rstrip][1]
+  def get_port
+    port = [(get_input('Enter the port you would like to use or leave blank for [443]: ') ), $stdin.gets.rstrip][1]
     if port == ''
       port = '443'
       print_success("Using #{port}\n")
@@ -26,7 +26,7 @@ class ServerSetUp
     else 
       print_success("Using #{port}\n")
       return port
-    end 
+    end
   end
   def hash_server(port)
     print_info("Starting Server!\n")
@@ -39,7 +39,7 @@ class ServerSetUp
         print_info("Getting Data!\n")
         out_put = client.gets()
         print_info("Writing to File\n")
-        File.open("#{file_name.strip}#{x}","w") {|f| f.write(Base64.decode64(out_put))}
+        File.open("#{file_name.strip}#{x}", 'w') {|f| f.write(Base64.decode64(out_put))}
         print_success("File Done!\n")
         x += 1 if file_name == "sys\r\n"
       end
@@ -58,7 +58,7 @@ class ServerSetUp
         print_info("Getting Data\n")
         out_put = client.gets()
         print_info("Writing to File\n")
-        File.open("#{file_name.strip}#{x}.dmp","w") {|f| f.write(Base64.decode64(out_put))}
+        File.open("#{file_name.strip}#{x}.dmp", 'w') {|f| f.write(Base64.decode64(out_put))}
         print_success("File Done!\n")
         x += 1
       end   
@@ -66,18 +66,27 @@ class ServerSetUp
     rescue => error
     print_error(error)
   end
-  def web_server()
+  def web_server
     print_info("Checking for Apache\n")
-    systemd_check = `systemctl status apache2`
-    service_check = `service apache2 status`
-    if systemd_check =~ /inactive/ or service_check =~ /NOT running/
+    if File.exist?('/usr/bin/systemctl')
+      @systemd_check = `systemctl status apache2`
+    elsif File.exist?('/usr/bin/service')
+      @service_check = `service apache2 status`
+    else
+      print_error("Can't Turn on Apache!")
+      exit
+    end
+    if @systemd_check =~ /inactive/ or @service_check =~ /NOT running/
       print_info("Starting Server\n")
-      begin
-        `service apache2 start`
-      rescue
+      if File.exist?('/usr/bin/systemctl')
         `systemctl start apache2`
-      end 
-    elsif systemd_check =~ /active/ or service_check =~ /running/
+      elsif File.exist?('/usr/bin/service')
+        `service apache2 start`
+      else
+        print_error('Could Not Start on Apache!')
+        exit
+      end
+    elsif @systemd_check =~ /active/ or @service_check =~ /running/
       print_info("Server Already Running!\n")
     else
       print_error("Could not find Apache!\n")
