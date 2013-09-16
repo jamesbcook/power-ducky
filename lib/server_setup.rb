@@ -76,30 +76,39 @@ class ServerSetUp
         print_error("Can't Find Startup Service")
         exit
       end
-    elsif
+    elsif File.exists?('/usr/sbin/apachectl')
       if File.exists?('/usr/bin/systemctl')
         @systemd_check = `systemctl status httpd`
       else
         print_error("Can't Find Startup Service")
         exit
       end
+    else
+      print_error("Can't Find Apache!\n")
+      exit
     end
     if @systemd_check =~ /inactive/ or @service_check =~ /NOT running/
       print_info("Starting Server\n")
       if File.exist?('/usr/bin/systemctl')
-        `systemctl start apache2`
-        print_success("Server Started!")
-        sleep(2)
+        out_put = `systemctl start httpd 2>&1`
+        if out_put =~ /Access denied/
+          print_error("Access Denied, Not Running as Root\n")
+          exit
+        else
+          print_success("Server Started!\n")
+          sleep(2)
+        end
       elsif File.exist?('/usr/sbin/service')
-        `service apache2 start`
-        print_success("Server Started!")
+        out_put = `service apache2 start`
+        print_success("Server Started!\n")
         sleep(2)
       else
-        print_error('Could Not Start Apache!')
+        print_error("Could Not Start Apache!\n")
         exit
       end
     elsif @systemd_check =~ /active/ or @service_check =~ /running/
       print_info("Server Already Running!\n")
+      sleep(2)
     end 
     rescue => error
       print_error("#{error}\n")
