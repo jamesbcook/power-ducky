@@ -3,16 +3,16 @@ require 'base64'
 require 'fileutils'
 module MainCommands
   def print_error(text)
-    print "\e[31m[-]\e[0m #{text}"
+    print "\e[31;1m[-]\e[0m #{text}"
   end 
   def print_info(text)
-    print "\e[34m[*]\e[0m #{text}"
+    print "\e[34;1m[*]\e[0m #{text}"
   end 
   def print_success(text)
-    print "\e[32m[+]\e[0m #{text}"
+    print "\e[32;1m[+]\e[0m #{text}"
   end 
   def get_input(text)
-    print "\e[33m[!]\e[0m #{text}"
+    print "\e[33;1m[!]\e[0m #{text}"
   end
   def file_root
     File.expand_path(File.dirname($0))
@@ -53,6 +53,8 @@ module MainCommands
     hex_string.scan(/../).map { |x| x.hex.chr }.join
   end
   def from_bin(file)
+    #bin_file = File.open(file, 'rb')
+    #bin_file.each_byte.map { |b| b.to_s(16) }.join
     file.each_byte.map { |b| b.to_s(16) }.join
   end
 end
