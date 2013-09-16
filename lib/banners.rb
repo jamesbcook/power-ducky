@@ -50,4 +50,8 @@ module Banners
 
     "
   end
+  def print_banner_color(banner)
+    random_color = rand(30..38)
+    print "\e[#{random_color};1m#{banner}\e[0m\n"
+  end
 end
