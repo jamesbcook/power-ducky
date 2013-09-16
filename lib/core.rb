@@ -4,13 +4,13 @@ require 'fileutils'
 module MainCommands
   def print_error(text)
     print "\e[31;1m[-]\e[0m #{text}"
-  end 
+  end
   def print_info(text)
     print "\e[34;1m[*]\e[0m #{text}"
-  end 
+  end
   def print_success(text)
     print "\e[32;1m[+]\e[0m #{text}"
-  end 
+  end
   def get_input(text)
     print "\e[33;1m[!]\e[0m #{text}"
   end
@@ -35,6 +35,9 @@ module MainCommands
   def wget_file
     'wget_powershell.txt'
   end
+  def hex_to_bin_file
+    'hex_to_bin.txt'
+  end
   def save_sam
     'reg.exe save HKLM\SAM c:\windows\temp\sam'
   end
@@ -49,13 +52,12 @@ module MainCommands
     file_name = random_length.to_i.times.map {[*'a'..'z',*'A'..'Z',*'0'..'9'].sample}.join
     return file_name
   end
-  def to_bin(hex_string)
-    hex_string.scan(/../).map { |x| x.hex.chr }.join
+  def hex_to_bin(file_name,hex_string)
+    File.open(file_name,'w') {|f| f.write(hex_string.scan(/../).map { |x| x.hex }.pack('c*'))}
   end
-  def from_bin(file)
-    #bin_file = File.open(file, 'rb')
-    #bin_file.each_byte.map { |b| b.to_s(16) }.join
-    file.each_byte.map { |b| b.to_s(16) }.join
+  def bin_to_hex(file)
+    bin_file = File.open(file, 'rb').read
+    bin_file.unpack('H*').first
   end
 end
 module MsfCommands

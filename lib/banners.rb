@@ -50,6 +50,16 @@ module Banners
 
     "
   end
+  def hex_to_bin_banner
+    "
+        __  __             __           ____  _
+       / / / /__  _  __   / /_____     / __ )(_)___
+      / /_/ / _ \\| |/_/  / __/ __ \\   / __  / / __ \\
+     / __  /  __/>  <   / /_/ /_/ /  / /_/ / / / / /
+    /_/ /_/\\___/_/|_|   \\__/\\____/  /_____/_/_/ /_/
+
+    "
+  end
   def print_banner_color(banner)
     random_color = rand(30..38)
     print "\e[#{random_color};1m#{banner}\e[0m\n"

