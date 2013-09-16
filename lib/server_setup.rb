@@ -68,29 +68,38 @@ class ServerSetUp
   end
   def web_server
     print_info("Checking for Apache\n")
-    if File.exist?('/usr/bin/systemctl')
-      @systemd_check = `systemctl status apache2`
-    elsif File.exist?('/usr/bin/service')
-      @service_check = `service apache2 status`
-    else
-      print_error("Can't Turn on Apache!")
-      exit
+    sleep(2)
+    if File.exists?('/usr/sbin/apache2')
+      if File.exist?('/usr/sbin/service')
+        @service_check = `service apache2 status`
+      else
+        print_error("Can't Find Startup Service")
+        exit
+      end
+    elsif
+      if File.exists?('/usr/bin/systemctl')
+        @systemd_check = `systemctl status httpd`
+      else
+        print_error("Can't Find Startup Service")
+        exit
+      end
     end
     if @systemd_check =~ /inactive/ or @service_check =~ /NOT running/
       print_info("Starting Server\n")
       if File.exist?('/usr/bin/systemctl')
         `systemctl start apache2`
-      elsif File.exist?('/usr/bin/service')
+        print_success("Server Started!")
+        sleep(2)
+      elsif File.exist?('/usr/sbin/service')
         `service apache2 start`
+        print_success("Server Started!")
+        sleep(2)
       else
-        print_error('Could Not Start on Apache!')
+        print_error('Could Not Start Apache!')
         exit
       end
     elsif @systemd_check =~ /active/ or @service_check =~ /running/
       print_info("Server Already Running!\n")
-    else
-      print_error("Could not find Apache!\n")
-      exit
     end 
     rescue => error
       print_error("#{error}\n")
