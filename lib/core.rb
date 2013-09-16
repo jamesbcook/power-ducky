@@ -18,6 +18,7 @@ module MainCommands
     File.expand_path(File.dirname($0))
   end
   def text_path
+    Dir.mkdir(file_root + '/text_files/') if not Dir.exists?(file_root + '/text_files/')
     file_root + '/text_files/'
   end
   def duck_encode_file
@@ -87,7 +88,8 @@ module MsfCommands
     return shellcode
   end
   def metasploit_setup(host,port)
-    file_path = 'metaspoit_files/'
+    Dir.mkdir(file_root + '/metaspoit_files/') if not Dir.exists?(file_root + '/metaspoit_files/')
+    file_path = file_root + '/metaspoit_files/'
     rc_file = 'msf_listener.rc'
     print_info("Setting up Metasploit this may take a moment\n")
     file = File.open("#{file_path}#{rc_file}",'w')
