@@ -42,7 +42,7 @@ end
 def hex_setup
   file_path = [(get_input('Enter full path to executable: ') ), $stdin.gets.rstrip][1]
   file_name = file_path.split('/')[-1]
-  hex_setup if not File.exists?(file_name)
+  hex_setup if not File.exists?(file_path)
   hex_string = bin_to_hex(file_path)
   random_name_answer = [(get_input('Would you like to randomize the file name?[yes/no] ') ), $stdin.gets.rstrip][1]
   if random_name_answer == 'yes'
