@@ -69,7 +69,7 @@ module Menu
     Readline.readline('> ', true)
   end
   def language_menu
-    puts "\nPlease select keyboard the appropriate keyboard layout!"
+    puts "\nPlease select the appropriate keyboard layout!"
     print "
     \n1) us \
     \n2) be \
