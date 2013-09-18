@@ -68,4 +68,21 @@ module Menu
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
+  def language_menu
+    puts "\nPlease select keyboard the appropriate keyboard layout!"
+    print "
+    \n1) us \
+    \n2) be \
+    \n3) it \
+    \n4) dk \
+    \n5) es \
+    \n6) uk \
+    \n7) sv \
+    \n8) ru \
+    \n9) pt \
+    \n10) de \
+    \n11) no \
+    \n12) fr\n"
+    Readline.readline('> ', true)
+  end
 end

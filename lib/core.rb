@@ -24,6 +24,9 @@ module MainCommands
   def duck_encode_file
     file_root + '/duck_encoder/'
   end
+  def language_dir
+    duck_encode_file + '/resources/'
+  end
   def reverse_meterpreter_file
     'powershell_reverse_ducky.txt'
   end
