@@ -66,6 +66,23 @@ class ServerSetUp
     rescue => error
     print_error(error)
   end
+  def wifi_server(port)
+    print_info("Starting Server!\n")
+    server = TCPServer.open(port.to_i)
+    loop{
+      Thread.start(server.accept) do |client|
+        file_name = client.recv(1024)
+        print_success("Got #{file_name.strip} file!\n")
+        print_info("Getting Data\n")
+        out_put = client.gets()
+        print_info("Writing to File\n")
+        File.open("#{file_name.strip}.xml", 'w') {|f| f.write(Base64.decode64(out_put))}
+        print_success("File Done!\n")
+      end
+    }
+  rescue => error
+    print_error(error)
+  end
   def web_server
     print_info("Checking for Apache\n")
     sleep(2)
@@ -113,5 +130,9 @@ class ServerSetUp
     rescue => error
       print_error("#{error}\n")
       exit
+  end
+  trap("INT") do
+    print_info("Caught CTRL-C stopping server!\n")
+    exit
   end
 end

