@@ -40,6 +40,9 @@ module MainCommands
   def lsass_dump_file
     'lsassdump_tcp.txt'
   end
+  def wifi_dump_file
+    'wifidump_tcp.txt'
+  end
   def wget_file
     'wget_powershell.txt'
   end

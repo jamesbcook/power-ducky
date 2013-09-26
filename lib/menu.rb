@@ -10,8 +10,9 @@ module Menu
       \n1) Reverse Meterpreter \
       \n2) Dump Domain and Local Hashes \
       \n3) Dump Lsass Process \
-      \n4) Wget Execute \
-      \n5) Hex to Bin \
+      \n4) Dump Wifi Passwords \
+      \n5) Wget Execute \
+      \n6) Hex to Bin \
       \n99) Exit\n"
     Readline.readline('> ', true)
   end
@@ -46,6 +47,16 @@ module Menu
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
+  def dump_wifi_menu
+    system('clear')
+    print_banner_color(dump_wifi_banner)
+    puts 'This payload will dump available wifi profiles through powershell and then upload it to a listening server'
+    print "
+    \n1) Admin with UAC \
+    \n2) Admin with out UAC \
+    \n99) Main Menu\n"
+    Readline.readline('> ', true)
+  end
   def powershell_wget_menu
     system('clear')
     print_banner_color(powershell_wget_banner)
@@ -69,7 +80,7 @@ module Menu
     Readline.readline('> ', true)
   end
   def language_menu
-    puts "\nPlease select keyboard the appropriate keyboard layout!"
+    puts "\nPlease select the appropriate keyboard layout!"
     print "
     \n1) us \
     \n2) be \

