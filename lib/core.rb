@@ -69,6 +69,7 @@ module MainCommands
     if samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
       Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key.txt")
       sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key.txt")
+      print_success("Printing Hashes!\n")
       puts sam_dump
       File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
     else
