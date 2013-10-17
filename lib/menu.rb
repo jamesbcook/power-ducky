@@ -6,13 +6,15 @@ module Menu
   def main_menu
     system('clear')
     print_banner_color(main_banner)
+    if Process.uid != 0
+      print_info('Not Running as Root some payloads may not work properly')
+    end
     print "
       \n1) Reverse Meterpreter \
       \n2) Dump Domain and Local Hashes \
       \n3) Dump Lsass Process \
       \n4) Dump Wifi Passwords \
       \n5) Wget Execute \
-      \n6) Hex to Bin \
       \n99) Exit\n"
     Readline.readline('> ', true)
   end
@@ -32,8 +34,10 @@ module Menu
     print_banner_color(dump_hash_banner)
     puts 'This payload will dump Domain cached and Local Hashes and then push them to a listening server'
     print "
-    \n1) Admin with UAC \
-    \n2) Admin with out UAC \
+    \n1) SSL Admin with UAC \
+    \n2) SSL Admin with out UAC \
+    \n3) Admin with UAC \
+    \n4) Admin with out UAC \
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
@@ -42,8 +46,10 @@ module Menu
     print_banner_color(dump_lsass_banner)
     puts 'This payload will dump the lsass process memory through powershell and then upload it to a listening server'
     print "
-    \n1) Admin with UAC \
-    \n2) Admin with out UAC \
+    \n1) SSL Admin with UAC \
+    \n2) SSL Admin with out UAC \
+    \n3) Admin with UAC \
+    \n4) Admin with out UAC \
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
@@ -52,8 +58,12 @@ module Menu
     print_banner_color(dump_wifi_banner)
     puts 'This payload will dump available wifi profiles through powershell and then upload it to a listening server'
     print "
-    \n1) Admin with UAC \
-    \n2) Admin with out UAC \
+    \n1) SSL Admin with UAC \
+    \n2) SSL Admin with out UAC \
+    \n3) SSL Low Priv \
+    \n4) Admin with UAC \
+    \n5) Admin with out UAC \
+    \n6) Low Priv \
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
@@ -68,17 +78,17 @@ module Menu
     \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
-  def hex_to_bin_menu
-    system('clear')
-    print_banner_color(hex_to_bin_banner)
-    puts 'This payload will convert a binary to hex and then convert it back to a binary on the victim system and execute'
-    print "
-    \n1) Admin with UAC\
-    \n2) Admin with out UAC\
-    \n3) Low Priv  \
-    \n99) Main Menu\n"
-    Readline.readline('> ', true)
-  end
+  #def hex_to_bin_menu
+  #  system('clear')
+  #  print_banner_color(hex_to_bin_banner)
+  #  puts 'This payload will convert a binary to hex and then convert it back to a binary on the victim system and execute'
+  #  print "
+  #  \n1) Admin with UAC\
+  #  \n2) Admin with out UAC\
+  #  \n3) Low Priv  \
+  #  \n99) Main Menu\n"
+  #  Readline.readline('> ', true)
+  #end
   def language_menu
     puts "\nPlease select the appropriate keyboard layout!"
     print "

