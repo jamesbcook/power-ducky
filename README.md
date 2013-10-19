@@ -3,6 +3,8 @@ power-ducky
 
 Power Shell Scripts for the Hak5 Ducky
 
+```
+
         ____                             ____             __
        / __ \____ _      _____  _____   / __ \__  _______/ /____  __
       / /_/ / __ \ | /| / / _ \/ ___/  / / / / / / / ___/ //_/ / / /
@@ -10,20 +12,23 @@ Power Shell Scripts for the Hak5 Ducky
     /_/    \____/|__/|__/\___/_/     /_____/\__,_/\___/_/|_|\__, /
                                                            /____/
   
-      
-1) Reverse Meterpreter       
-2) Dump Domain and Local Hashes       
-3) Dump Lsass Process       
-4) Dump Wifi Passwords
-5) Wget Execute       
-6) Hex to Bin       
+1) Fast Meterpreter      
+2) Reverse Meterpreter       
+3) Dump Domain and Local Hashes       
+4) Dump Lsass Process       
+5) Dump Wifi Passwords
+6) Wget Execute       
 99) Exit
 
+```
 
-Script is in beta, but everything should work with out a problem besides Hex to bin.
 
 All payloads are written in powershell so nothing should be caught by AV
 
+
+####Fast Meterpreter
+
+Stores the meterpreter script on a web sever, the ducky will then go grab the script using ssl and execute it on the victims machine.
 
 ####Reverse Meterpreter
 
