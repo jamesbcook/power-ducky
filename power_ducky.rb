@@ -101,7 +101,10 @@ end
 def start_msf(host,port)
   msf = Readline.readline("#{get_input('Would you like to start the Metasploit Listener[yes/no]')} ", true)
   if not @ssl and msf == 'yes'
+    Thread.new { @server_setup.ruby_web_server(@web_port,@ssl,@web_host,@shellcode) }
     metasploit_setup(host,port)
+  elsif not @ssl and msf != 'yes'
+    @server_setup.ruby_web_server(@web_port,@ssl,@web_host,@shellcode)
   elsif @ssl and msf == 'yes'
     Thread.new { @server_setup.ruby_web_server(@web_port,@ssl,@web_host,@shellcode) }
     metasploit_setup(host,port)
