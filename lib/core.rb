@@ -5,37 +5,39 @@ require 'fileutils'
 require 'open3'
 require 'readline'
 module Core
-  def print_error(text)
-    puts "\e[31;1m[-]\e[0m #{text}"
-  end
+  module Commands
+    def print_error(text)
+      puts "\e[31;1m[-]\e[0m #{text}"
+    end
 
-  def print_info(text)
-    puts "\e[34;1m[*]\e[0m #{text}"
-  end
+    def print_info(text)
+      puts "\e[34;1m[*]\e[0m #{text}"
+    end
 
-  def print_success(text)
-    puts "\e[32;1m[+]\e[0m #{text}"
-  end
+    def print_success(text)
+      puts "\e[32;1m[+]\e[0m #{text}"
+    end
 
-  def rgets(prompt = ' ', default_value = '')
-    line = Readline.readline(prompt, false)
-    line = default_value if line.empty?
-    line
-  end
+    def rgets(prompt = ' ', default_value = '')
+      line = Readline.readline(prompt, false)
+      line = default_value if line.empty?
+      line
+    end
 
-  def print_hashes(x)
-    samdump_path, samdump_status = Open3.capture2('which samdump2')
-    bkhive_path, bkhive_status = Open3.capture2('which bkhive')
-    print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /exit 1/
-    print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /exit 1/
-    if samdump_status.to_s =~ /exit 0/ and bkhive_status.to_s =~ /exit 0/
-      Open3.capture2("#{bkhive_path.chomp} #{loot_dir}sys#{x} #{loot_dir}sys_key#{x}.txt")
-      sam_dump,sam_exit = Open3.capture2("#{samdump_path.chomp} #{loot_dir}sam#{x} #{loot_dir}sys_key#{x}.txt")
-      print_success("Printing Hashes!\n")
-      puts sam_dump
-      File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
-    else
-      print_error("Can't dump local hashes!\n")
+    def print_hashes(x)
+      samdump_path, samdump_status = Open3.capture2('which samdump2')
+      bkhive_path, bkhive_status = Open3.capture2('which bkhive')
+      print_error("Can't find samdump2!\n") if samdump_status.to_s =~ /exit 1/
+      print_error("Can't find bkhive!\n") if bkhive_status.to_s =~ /exit 1/
+      if samdump_status.to_s =~ /exit 0/ and bkhive_status.to_s =~ /exit 0/
+        Open3.capture2("#{bkhive_path.chomp} #{loot_dir}sys#{x} #{loot_dir}sys_key#{x}.txt")
+        sam_dump,sam_exit = Open3.capture2("#{samdump_path.chomp} #{loot_dir}sam#{x} #{loot_dir}sys_key#{x}.txt")
+        print_success("Printing Hashes!\n")
+        puts sam_dump
+        File.open("#{loot_dir}hashes#{x}.txt",'w') {|f| f.write(sam_dump)}
+      else
+        print_error("Can't dump local hashes!\n")
+      end
     end
   end
 
