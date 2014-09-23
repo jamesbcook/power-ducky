@@ -24,6 +24,7 @@ class Menu
   end
 
   def list_options(options)
+    system('clear')
     options.each { |item| puts "#{item}" }
     puts
     choice = rgets('Choice: ')
