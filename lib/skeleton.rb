@@ -6,6 +6,7 @@ require 'ducky_setup'
 # Class that all modules will inheart from making it easier to create modules
 class Skeleton
   include Core::Commands
+  include Core::Files
   class << self
     attr_accessor :title, :description
   end
@@ -14,7 +15,11 @@ class Skeleton
     system('clear')
     puts self.class.title
     puts self.class.description
+    @ducky_writer = Ducky::Writer.new
+    @server_setup = Server::Setup.new
     setup
+    run
+    finish
   end
 
   def setup; end
