@@ -15,6 +15,7 @@ class Skeleton
     system('clear')
     puts self.class.title
     puts self.class.description
+    @file_name = self.class.title.gsub(' ', '_')
     @ducky_writer = Ducky::Writer.new
     @server_setup = Server::Setup.new
     setup

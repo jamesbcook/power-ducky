@@ -4,6 +4,8 @@ require 'menus'
 
 class Guide < Menu
   def initialize(options)
+    # TODO: menu optoins need to include:
+    # msf path, text path
     Menu.opts = {}
 
     launch!

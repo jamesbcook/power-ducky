@@ -39,7 +39,7 @@ module Server
 
     def host_payload?
       choice = ''
-      until choice.downcase[0] == 'y' || choice.downcase[0] == 'no'
+      until choice.downcase[0] == 'y' || choice.downcase[0] == 'n'
         choice = rgets('Host payload? [y/n]: ', 'y')
       end
       choice.downcase[0] == 'y' ? true : false
@@ -58,7 +58,7 @@ module Server
         @server = TCPServer.open(port.to_i)
       end
     end
-
+    # TODO: combine hash, and lass getting of files
     def hash
       x = 0
       loop do

