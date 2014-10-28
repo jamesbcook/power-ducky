@@ -4,25 +4,25 @@ include Core::Commands
 module Ducky
   class Writer
     def menu
-      options.each do |key, ops|
+      _options.each do |key, ops|
         puts "#{key}) #{ops}"
       end
       rgets('Choice: ', '3')
     end
 
     def write(choice)
-      options_lambda[choice.to_sym].call
+      _options_lambda[choice.to_sym].call
     end
 
     private
 
-    def options_lambda
+    def _options_lambda
       { :'1' => -> () { admin_with_uac },
         :'2' => -> () { admin_with_out_uac },
         :'3' => -> () { low_priv } }
     end
 
-    def options
+    def _options
       { :'1' => 'admin_with_uac',
         :'2' => 'admin_with_out_uac',
         :'3' => 'low_priv' }
@@ -60,10 +60,10 @@ module Ducky
   class Compile
     include Core::Files
     def initialize(file_name)
-      choice = pick_language
-      language = language_options[choice.to_sym]
+      choice = _pick_language
+      language = _language_options[choice.to_sym]
       print_info('Creating Bin File!')
-      cmd = compile_cmd(file_name, language)
+      cmd = _compile_cmd(file_name, language)
       output = `#{cmd}`
       if output =~ /Exception/
         print_error('Wrong Version of Java')
@@ -77,14 +77,14 @@ module Ducky
 
     private
 
-    def pick_language
-      language_options.each do |key, lang|
+    def _pick_language
+      _language_options.each do |key, lang|
         puts "#{key}) #{lang}"
       end
       rgets('Choice: ', 1)
     end
 
-    def language_options
+    def _language_options
       { :'1' => 'us.properties', :'2' => 'be.properties',
         :'3' => 'it.properties', :'4' => 'dk.properties',
         :'5' => 'es.properties', :'6' => 'uk.properties',
@@ -93,7 +93,7 @@ module Ducky
         :'11' => 'no.properties', :'12' => 'fr.properties' }
     end
 
-    def compile_cmd(file_name, language)
+    def _compile_cmd(file_name, language)
       cmd = "java -jar #{duck_encode_file}encoder.jar -i "
       cmd << "#{text_path}#{file_name} -o #{file_root}/inject.bin -l "
       cmd << "#{language_dir}#{language} 2>&1"
