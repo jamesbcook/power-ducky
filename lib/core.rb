@@ -22,6 +22,18 @@ module Core
       line
     end
 
+    def encode_command(command)
+      Base64.encode64(command.encode('utf-16le')).delete("\r\n")
+    end
+
+    def random_name_gen
+      random_length = rand(4..8)
+      file_name = random_length.to_i.times.map do
+        [*'a'..'z', *'A'..'Z', *'0'..'9'].sample
+      end.join
+      file_name
+    end
+
     def print_hashes(x)
       samdump_path, samdump_status = Open3.capture2('which samdump2')
       bkhive_path, bkhive_status = Open3.capture2('which bkhive')
