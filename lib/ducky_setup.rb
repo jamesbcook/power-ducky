@@ -12,14 +12,16 @@ module Ducky
 
     def write(choice)
       _options_lambda[choice.to_sym].call
+    rescue => e
+      puts print_error(e)
     end
 
     private
 
     def _options_lambda
-      { :'1' => -> () { admin_with_uac },
-        :'2' => -> () { admin_with_out_uac },
-        :'3' => -> () { low_priv } }
+      { :'1' => -> () { _admin_with_uac },
+        :'2' => -> () { _admin_with_out_uac },
+        :'3' => -> () { _low_priv } }
     end
 
     def _options
@@ -28,7 +30,7 @@ module Ducky
         :'3' => 'low_priv' }
     end
 
-    def admin_with_uac
+    def _admin_with_uac
       cmd = "DELAY 3000\n"
       cmd << "CTRL ESC\n"
       cmd << "DELAY 200\n"
@@ -37,29 +39,34 @@ module Ducky
       cmd << "DELAY 2000\n"
       cmd << "ALT y\n"
       cmd << "DELAY 2000\n"
+      cmd << 'STRING '
     end
 
-    def admin_with_out_uac
+    def _admin_with_out_uac
       cmd = "DELAY 2000\n"
       cmd << "CTRL ESC\n"
       cmd << "DELAY 200\n"
       cmd << "STRING cmd\n"
       cmd << "CTRL-SHIFT ENTER\n"
       cmd << "DELAY 2000\n"
+      cmd << 'STRING '
     end
 
-    def low_priv
+    def _low_priv
       cmd = "DELAY 2000\n"
       cmd << "GUI r\n"
       cmd << "DELAY 500\n"
       cmd << "STRING cmd\n"
       cmd << "ENTER\n"
       cmd << "DELAY 500\n"
+      cmd << 'STRING '
     end
   end
+
   class Compile
     include Core::Files
     def initialize(file_name)
+      File.open("#{text_path}#{file_name}", 'a') { |f| f.write("\nENTER") }
       choice = _pick_language
       language = _language_options[choice.to_sym]
       print_info('Creating Bin File!')
@@ -81,7 +88,7 @@ module Ducky
       _language_options.each do |key, lang|
         puts "#{key}) #{lang}"
       end
-      rgets('Choice: ', 1)
+      rgets('Choice: ', '1')
     end
 
     def _language_options
