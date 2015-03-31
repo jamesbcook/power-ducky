@@ -32,6 +32,6 @@ class AddUser < Skeleton
   end
 
   def cmd_command2(user)
-    "STRING net local group Administrator #{user} /add"
+    "STRING net localgroup Administrators #{user} /add"
   end
 end
