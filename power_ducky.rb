@@ -18,6 +18,7 @@ APP_ROOT = File.dirname(frame_work)
 
 $LOAD_PATH.unshift(File.join(APP_ROOT, 'lib'))
 begin
+  fail('Needs ruby 2.0 or higher') if RUBY_VERSION < '2.0'
   require 'guide'
   Dir.chdir(APP_ROOT) do
     Guide.new(options)
